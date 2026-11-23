@@ -115,33 +115,79 @@
             transform: scale(1.06);
         }
 
-        .btn-refresh {
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             flex-shrink: 0;
-            width: 36px;
+        }
+
+        .desktop-mode-btn {
+            display: none;
             height: 36px;
+            padding: 0 11px;
             border-radius: 10px;
             border: 1px solid var(--border-color);
             background: #f8fafc;
             color: var(--text-sub);
-            font-size: 1rem;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
             cursor: pointer;
-            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s, color 0.2s, transform 0.15s;
+            gap: 5px;
+            white-space: nowrap;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
         }
 
-        .btn-refresh:hover {
+        .desktop-mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        .desktop-mode-btn.active {
             background: var(--primary-light);
+            border-color: var(--primary);
             color: var(--primary-dark);
         }
 
-        .btn-refresh:active {
-            transform: scale(0.94);
+        /* 頂部顯示模式切換器 (卡片 / 列表) */
+        .view-mode-switch {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 2px;
+            gap: 2px;
         }
 
-        .btn-refresh.spinning svg {
-            animation: spin 0.9s linear infinite;
+        .view-mode-btn {
+            height: 30px;
+            padding: 0 9px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-sub);
+            font-family: inherit;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+        }
+
+        .view-mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        .view-mode-btn.active {
+            background: #ffffff;
+            color: var(--primary-dark);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
         }
 
         /* 搜尋輸入框組 */
@@ -335,10 +381,52 @@
             color: var(--text-main);
         }
 
-        .filter-chip.clear-all-chip {
+        /* 已啟用篩選提示條 (獨立列，避免擠壓排序按鈕) */
+        .active-filter-collapse {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition: grid-template-rows 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease, margin-top 0.22s ease;
+            margin-top: 0;
+        }
+
+        .active-filter-collapse.open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 8px;
+        }
+
+        .active-filter-inner {
+            overflow: hidden;
+        }
+
+        .active-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
+            font-size: 0.78rem;
+            color: var(--text-sub);
+        }
+
+        .btn-reset-filters {
+            border: 1px solid #fecaca;
             background: #fef2f2;
-            border-color: #fecaca;
             color: #dc2626;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.18s ease, transform 0.12s ease;
+        }
+
+        .btn-reset-filters:active {
+            transform: scale(0.95);
         }
 
         /* 載入骨架屏與狀態區 */
@@ -428,6 +516,113 @@
             transform: translateY(0);
         }
 
+        /* 精簡列表模式（單屏可瀏覽多個團） */
+        #historyList.mode-compact {
+            gap: 0;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid rgba(229, 231, 235, 0.85);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045);
+            overflow: hidden;
+        }
+
+        #historyList.mode-compact:has(.empty-state) {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .history-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            min-width: 0;
+            background: var(--card-bg);
+            transition: background-color 0.16s ease, transform 0.12s ease;
+        }
+
+        .history-row:last-child {
+            border-bottom: none;
+        }
+
+        .history-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .history-row:active {
+            background-color: #eef5f1;
+            transform: scale(0.992);
+        }
+
+        .history-row.card-enter {
+            opacity: 0;
+            animation: cardFadeSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .row-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background-color: var(--primary);
+        }
+
+        .row-status-dot.is-early-closed {
+            background-color: #9ca3af;
+        }
+
+        .row-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .row-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.35;
+        }
+
+        .row-sub {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+            font-size: 0.74rem;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .row-sub-sep {
+            color: #d1d5db;
+        }
+
+        .row-role-pill {
+            color: #065f46;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 0 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.68rem;
+            flex-shrink: 0;
+        }
+
+        .row-chevron {
+            flex-shrink: 0;
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
         /* 精簡摘要歷史卡片 */
         .history-card {
             background-color: var(--card-bg);
@@ -444,6 +639,17 @@
 
         .history-card.is-early-closed {
             border-left-color: #9ca3af;
+        }
+
+        .history-card.is-selected {
+            border-color: var(--primary);
+            box-shadow: 0 6px 20px rgba(74, 140, 114, 0.16);
+            background-color: #f6fbf8;
+        }
+
+        .history-row.is-selected {
+            background-color: #ecf7f1;
+            box-shadow: inset 3px 0 0 var(--primary);
         }
 
         .history-card:hover {
@@ -995,7 +1201,20 @@
             color: #ffffff;
         }
 
-        /* 桌面版 (>640px) Modal 置中樣式 */
+        /* 桌面版 (>640px) Modal 與雙欄電腦閱覽模式 */
+        .workspace-grid {
+            display: block;
+            min-width: 0;
+        }
+
+        .list-pane {
+            min-width: 0;
+        }
+
+        .desktop-detail-pane {
+            display: none;
+        }
+
         @media (min-width: 640px) {
             body {
                 padding: 20px 16px 56px;
@@ -1027,6 +1246,91 @@
 
             .detail-body {
                 padding: 18px 22px 24px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .search-stack {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .member-scope-collapse {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (min-width: 960px) {
+            .desktop-mode-btn {
+                display: inline-flex;
+            }
+
+            .container.desktop-split-active {
+                max-width: 1180px;
+            }
+
+            .container.desktop-split-active .header-card {
+                position: static;
+            }
+
+            .container.desktop-split-active .workspace-grid {
+                display: grid;
+                grid-template-columns: minmax(350px, 430px) minmax(0, 1fr);
+                gap: 18px;
+                align-items: start;
+            }
+
+            .container.desktop-split-active .desktop-detail-pane {
+                display: flex;
+                flex-direction: column;
+                position: sticky;
+                top: 16px;
+                max-height: calc(100vh - 32px);
+                background: var(--card-bg);
+                border-radius: 20px;
+                border: 1px solid rgba(229, 231, 235, 0.9);
+                box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+                overflow: hidden;
+            }
+
+            .pane-header {
+                padding: 16px 20px 14px;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                background: #ffffff;
+                flex-shrink: 0;
+            }
+
+            .pane-kbd-hint {
+                font-size: 0.74rem;
+                color: var(--text-muted);
+                white-space: nowrap;
+            }
+
+            .pane-body {
+                padding: 20px 22px 26px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                min-width: 0;
+            }
+
+            .pane-empty {
+                padding: 56px 24px;
+                text-align: center;
+                color: var(--text-sub);
+            }
+
+            .pane-skeleton {
+                padding: 22px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
             }
         }
 
@@ -1076,24 +1380,32 @@
         // =========================================================================
         // 請確保此網址為已部署新版 groupHistory.js (含 getAllGroupHistory API) 之 GAS Web App /exec 網址
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxRSuUycyClSV6dw0HQ04PFue35by1DCiS4BW8eN1zNtrUjnNXu_WmOr8ltTzddreA4/exec";
-        const DISPLAY_BATCH_SIZE = 20;
+        const DISPLAY_BATCH_SIZES = { card: 20, compact: 50 };
 
         let allRecords = [];
         let filteredRecords = [];
         let renderedCount = 0;
         let isLoading = false;
+        let selectedRecordPos = -1;
+        let desktopReadingEnabled = true;
 
         const filterState = {
             keyword: '',
             memberQuery: '',
             memberScope: 'all', // 'all' | 'joiner' | 'host'
             status: 'all',      // 'all' | '圓滿結束' | '提前關團'
-            sortOrder: 'newest' // 'newest' | 'oldest'
+            sortOrder: 'newest', // 'newest' | 'oldest'
+            viewMode: 'card'    // 'card' | 'compact'
         };
 
         let searchDebounceTimer = null;
 
+        function isDesktopReadingMode() {
+            return desktopReadingEnabled && window.innerWidth >= 960;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            syncDesktopLayoutMode();
             bindEvents();
             loadAllHistory();
         });
@@ -1157,8 +1469,29 @@
                 applyFiltersAndRender();
             });
 
+            document.querySelectorAll('[data-view-mode]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const nextMode = btn.dataset.viewMode;
+                    if (!nextMode || filterState.viewMode === nextMode) return;
+                    filterState.viewMode = nextMode;
+                    document.querySelectorAll('[data-view-mode]').forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                    });
+                    applyFiltersAndRender();
+                });
+            });
+
+            const desktopToggleBtn = document.getElementById('desktopToggleBtn');
+            if (desktopToggleBtn) {
+                desktopToggleBtn.addEventListener('click', () => {
+                    desktopReadingEnabled = !desktopReadingEnabled;
+                    syncDesktopLayoutMode();
+                });
+            }
+
+            window.addEventListener('resize', syncDesktopLayoutMode, { passive: true });
+
             document.getElementById('clearAllFiltersBtn').addEventListener('click', resetAllFilters);
-            document.getElementById('refreshBtn').addEventListener('click', () => loadAllHistory(true));
             document.getElementById('backToTopBtn').addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -1173,10 +1506,60 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeDetailModal();
+                    return;
+                }
+                if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && isDesktopReadingMode()) {
+                    const tag = document.activeElement && document.activeElement.tagName;
+                    const overlay = document.getElementById('detailOverlay');
+                    if (tag === 'INPUT' || tag === 'TEXTAREA' || (overlay && overlay.classList.contains('active'))) return;
+                    if (filteredRecords.length === 0) return;
+
+                    e.preventDefault();
+                    const delta = e.key === 'ArrowDown' ? 1 : -1;
+                    const base = selectedRecordPos >= 0 ? selectedRecordPos : 0;
+                    const nextPos = Math.max(0, Math.min(filteredRecords.length - 1, base + delta));
+                    if (nextPos === selectedRecordPos) return;
+
+                    if (nextPos >= renderedCount) {
+                        renderNextBatch();
+                    }
+                    selectGroupItem(nextPos);
+                    const targetEl = document.querySelector(`[data-pos="${nextPos}"]`);
+                    if (targetEl && targetEl.scrollIntoView) {
+                        targetEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
                 }
             });
 
             bindSheetSwipeDismiss();
+        }
+
+        function syncDesktopLayoutMode() {
+            const container = document.getElementById('mainContainer');
+            const toggleBtn = document.getElementById('desktopToggleBtn');
+            const splitActive = isDesktopReadingMode();
+
+            if (container) container.classList.toggle('desktop-split-active', splitActive);
+            if (toggleBtn) toggleBtn.classList.toggle('active', desktopReadingEnabled);
+
+            if (splitActive) {
+                const overlay = document.getElementById('detailOverlay');
+                if (overlay && overlay.classList.contains('active')) {
+                    finalizeCloseSheet();
+                }
+                if (filteredRecords.length > 0) {
+                    if (selectedRecordPos < 0 || selectedRecordPos >= filteredRecords.length) {
+                        selectedRecordPos = 0;
+                    }
+                    if (selectedRecordPos >= renderedCount) {
+                        renderNextBatch();
+                    }
+                    updateListSelectionHighlight();
+                    renderDesktopReadingPane(selectedRecordPos, false);
+                }
+            } else {
+                updateListSelectionHighlight();
+            }
         }
 
         function syncClearButtons() {
@@ -1276,29 +1659,30 @@
                 });
         }
 
-        function loadAllHistory(isRefresh = false) {
+        function loadAllHistory() {
             if (isLoading) return;
             isLoading = true;
 
-            const refreshBtn = document.getElementById('refreshBtn');
             const skeleton = document.getElementById('loadingSkeleton');
             const listEl = document.getElementById('historyList');
             const footerEl = document.getElementById('listFooter');
 
-            if (isRefresh) {
-                refreshBtn.classList.add('spinning');
-            }
             if (allRecords.length === 0) {
                 skeleton.style.display = 'flex';
                 skeleton.style.opacity = '1';
                 listEl.classList.remove('ready');
                 listEl.innerHTML = '';
                 footerEl.innerHTML = '';
+                const paneSk = document.getElementById('paneSkeleton');
+                const paneWrap = document.getElementById('paneContentWrap');
+                const paneEmpty = document.getElementById('paneEmpty');
+                if (paneSk) paneSk.style.display = 'flex';
+                if (paneWrap) paneWrap.style.display = 'none';
+                if (paneEmpty) paneEmpty.style.display = 'none';
             }
 
             callGasApi('getAllGroupHistory', {}, (response) => {
                 isLoading = false;
-                refreshBtn.classList.remove('spinning');
 
                 if (!response || response.success === false || !Array.isArray(response.historyList)) {
                     const errMsg = (response && response.error) || '後端資料格式異常，請確認已重新部署最新版 groupHistory.js';
@@ -1311,7 +1695,6 @@
                 applyFiltersAndRender();
             }, (err) => {
                 isLoading = false;
-                refreshBtn.classList.remove('spinning');
                 showLoadError('載入失敗：' + err);
             });
         }
@@ -1319,6 +1702,8 @@
         function hideSkeletonAndReveal() {
             const skeleton = document.getElementById('loadingSkeleton');
             const listEl = document.getElementById('historyList');
+            const paneSk = document.getElementById('paneSkeleton');
+            if (paneSk) paneSk.style.display = 'none';
             skeleton.style.opacity = '0';
             setTimeout(() => {
                 skeleton.style.display = 'none';
@@ -1332,6 +1717,12 @@
             const skeleton = document.getElementById('loadingSkeleton');
             const listEl = document.getElementById('historyList');
             const footerEl = document.getElementById('listFooter');
+            const paneSk = document.getElementById('paneSkeleton');
+            const paneWrap = document.getElementById('paneContentWrap');
+            const paneEmpty = document.getElementById('paneEmpty');
+            if (paneSk) paneSk.style.display = 'none';
+            if (paneWrap) paneWrap.style.display = 'none';
+            if (paneEmpty) paneEmpty.style.display = 'block';
             skeleton.style.display = 'none';
             listEl.classList.add('ready');
             footerEl.innerHTML = '';
@@ -1340,7 +1731,7 @@
                     <div class="empty-icon">⚠️</div>
                     <div class="empty-title">無法讀取揪團紀錄</div>
                     <div class="empty-desc">${escapeHtml(message)}</div>
-                    <button type="button" class="btn-primary-pill" onclick="loadAllHistory(true)">🔄 重新嘗試</button>
+                    <button type="button" class="btn-primary-pill" onclick="loadAllHistory()">🔄 重新嘗試</button>
                 </div>
             `;
         }
@@ -1469,22 +1860,31 @@
         function applyFiltersAndRender() {
             filteredRecords = computeFilteredRecords();
             renderedCount = 0;
+            selectedRecordPos = filteredRecords.length > 0 ? 0 : -1;
 
             const hasActiveFilter = !!(
                 filterState.keyword ||
                 filterState.memberQuery ||
-                filterState.status !== 'all' ||
-                filterState.sortOrder !== 'newest'
+                filterState.status !== 'all'
             );
-            document.getElementById('clearAllFiltersBtn').style.display = hasActiveFilter ? 'inline-flex' : 'none';
+            const activeCollapse = document.getElementById('activeFilterCollapse');
+            if (activeCollapse) {
+                activeCollapse.classList.toggle('open', hasActiveFilter);
+            }
 
             updateCountPill(filteredRecords.length, allRecords.length, hasActiveFilter);
 
             const listEl = document.getElementById('historyList');
+            listEl.classList.toggle('mode-compact', filterState.viewMode === 'compact');
             listEl.innerHTML = '';
 
             if (filteredRecords.length === 0) {
                 document.getElementById('listFooter').innerHTML = '';
+                const paneWrap = document.getElementById('paneContentWrap');
+                const paneEmpty = document.getElementById('paneEmpty');
+                if (paneWrap) paneWrap.style.display = 'none';
+                if (paneEmpty) paneEmpty.style.display = 'block';
+
                 const emptyTitle = allRecords.length === 0 ? '目前沒有揪團歷史記錄' : '找不到符合條件的揪團';
                 const emptyDesc = allRecords.length === 0
                     ? '待揪團結束歸檔後就會顯示在這裡。'
@@ -1501,6 +1901,10 @@
             }
 
             renderNextBatch();
+
+            if (isDesktopReadingMode()) {
+                renderDesktopReadingPane(selectedRecordPos, false);
+            }
         }
 
         function updateCountPill(matchedCount, totalCount, isFiltered) {
@@ -1515,7 +1919,9 @@
 
         function renderNextBatch() {
             const listEl = document.getElementById('historyList');
-            const nextSlice = filteredRecords.slice(renderedCount, renderedCount + DISPLAY_BATCH_SIZE);
+            const isCompact = filterState.viewMode === 'compact';
+            const batchSize = isCompact ? DISPLAY_BATCH_SIZES.compact : DISPLAY_BATCH_SIZES.card;
+            const nextSlice = filteredRecords.slice(renderedCount, renderedCount + batchSize);
             const kw = filterState.keyword;
             const mb = filterState.memberQuery;
 
@@ -1523,11 +1929,51 @@
             nextSlice.forEach((entry, idxInBatch) => {
                 const rec = entry.record;
                 const globalPos = renderedCount + idxInBatch;
-                const delayMs = Math.min(idxInBatch, 10) * 26;
+                const delayMs = Math.min(idxInBatch, isCompact ? 14 : 10) * (isCompact ? 14 : 26);
                 const isEarlyClosed = rec.endType === '提前關團';
                 const statusClass = isEarlyClosed ? 'status-closed' : 'status-done';
-
                 const titleHtml = highlightText(rec.title, kw);
+                const isSelected = isDesktopReadingMode() && globalPos === selectedRecordPos;
+
+                if (isCompact) {
+                    const compactDate = (rec.startTime ? rec.startTime.split(' ')[0] : rec.hostDate) || '未記錄';
+                    let compactRoleHtml = '';
+                    if (mb) {
+                        if (entry.matchedAsHost && entry.matchedAsJoiner) {
+                            compactRoleHtml = '<span class="row-role-pill">主揪&參加</span>';
+                        } else if (entry.matchedAsHost) {
+                            compactRoleHtml = '<span class="row-role-pill">主揪</span>';
+                        } else if (entry.matchedAsJoiner) {
+                            compactRoleHtml = '<span class="row-role-pill">參加</span>';
+                        }
+                    }
+
+                    html += `
+                        <div class="history-row card-enter ${isSelected ? 'is-selected' : ''}"
+                             data-pos="${globalPos}"
+                             style="animation-delay: ${delayMs}ms"
+                             onclick="selectGroupItem(${globalPos})"
+                             role="button"
+                             tabindex="0"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectGroupItem(${globalPos});}">
+                            <span class="row-status-dot ${isEarlyClosed ? 'is-early-closed' : ''}" title="${escapeHtml(rec.endType)}"></span>
+                            <div class="row-main">
+                                <div class="row-title">${titleHtml}</div>
+                                <div class="row-sub">
+                                    <span>${escapeHtml(compactDate)}</span>
+                                    <span class="row-sub-sep">·</span>
+                                    <span>主揪 ${escapeHtml(rec.host)}</span>
+                                    <span class="row-sub-sep">·</span>
+                                    <span>${rec.joiners.length}人</span>
+                                    ${compactRoleHtml}
+                                </div>
+                            </div>
+                            <span class="row-chevron" aria-hidden="true">›</span>
+                        </div>
+                    `;
+                    return;
+                }
+
                 const snippetText = extractSearchSnippet(rec.bodyText, kw);
                 const snippetHtml = snippetText
                     ? highlightText(snippetText, kw)
@@ -1549,12 +1995,13 @@
                     : '';
 
                 html += `
-                    <article class="history-card card-enter ${isEarlyClosed ? 'is-early-closed' : ''}"
+                    <article class="history-card card-enter ${isEarlyClosed ? 'is-early-closed' : ''} ${isSelected ? 'is-selected' : ''}"
+                             data-pos="${globalPos}"
                              style="animation-delay: ${delayMs}ms"
-                             onclick="openDetailModal(${globalPos})"
+                             onclick="selectGroupItem(${globalPos})"
                              role="button"
                              tabindex="0"
-                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetailModal(${globalPos});}">
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectGroupItem(${globalPos});}">
                         <div class="card-meta-top">
                             <span class="time-badge">📅 ${escapeHtml(rec.shortTime)}</span>
                             <span class="status-badge ${statusClass}">${escapeHtml(rec.endType)}</span>
@@ -1712,44 +2159,59 @@
             sheetAnimState.animations = [];
         }
 
-        function openDetailModal(filteredPos) {
-            const entry = filteredRecords[filteredPos];
-            if (!entry) return;
+        function selectGroupItem(filteredPos) {
+            selectedRecordPos = filteredPos;
+            if (isDesktopReadingMode()) {
+                updateListSelectionHighlight();
+                renderDesktopReadingPane(filteredPos, true);
+                return;
+            }
+            openDetailModal(filteredPos);
+        }
 
+        function updateListSelectionHighlight() {
+            const splitActive = isDesktopReadingMode();
+            document.querySelectorAll('#historyList [data-pos]').forEach(el => {
+                const pos = parseInt(el.dataset.pos, 10);
+                el.classList.toggle('is-selected', splitActive && pos === selectedRecordPos);
+            });
+        }
+
+        /**
+         * 共用詳情內容渲染器（供手機 Bottom Sheet 與電腦雙欄閱讀窗格共用）
+         */
+        function populateDetailView(prefix, entry) {
             const rec = entry.record;
             const kw = filterState.keyword;
             const mbLower = filterState.memberQuery.toLowerCase();
 
-            // 填充頂部狀態與時間
-            const statusEl = document.getElementById('detailStatusBadge');
+            const statusEl = document.getElementById(`${prefix}StatusBadge`);
             const isEarlyClosed = rec.endType === '提前關團';
             statusEl.textContent = rec.endType;
             statusEl.className = `status-badge ${isEarlyClosed ? 'status-closed' : 'status-done'}`;
 
-            document.getElementById('detailTopTime').textContent = `📅 ${rec.shortTime}`;
-            document.getElementById('detailTitle').innerHTML = highlightText(rec.title, kw);
+            document.getElementById(`${prefix}TopTime`).textContent = `📅 ${rec.shortTime}`;
+            document.getElementById(`${prefix}Title`).innerHTML = highlightText(rec.title, kw);
 
-            // 時間資訊區塊
-            document.getElementById('detailActivityTime').textContent = rec.displayTime;
-            const hostDateRow = document.getElementById('detailHostDateRow');
+            document.getElementById(`${prefix}ActivityTime`).textContent = rec.displayTime;
+            const hostDateRow = document.getElementById(`${prefix}HostDateRow`);
             if (rec.hostDate) {
-                document.getElementById('detailHostDate').textContent = rec.hostDate;
+                document.getElementById(`${prefix}HostDate`).textContent = rec.hostDate;
                 hostDateRow.style.display = 'flex';
             } else {
                 hostDateRow.style.display = 'none';
             }
 
-            // 地點資訊卡片
-            const locCard = document.getElementById('detailLocationCard');
+            const locCard = document.getElementById(`${prefix}LocationCard`);
             if (rec.locationName) {
-                document.getElementById('detailLocName').textContent = rec.locationName;
-                const addrEl = document.getElementById('detailLocAddr');
+                document.getElementById(`${prefix}LocName`).textContent = rec.locationName;
+                const addrEl = document.getElementById(`${prefix}LocAddr`);
                 addrEl.textContent = rec.locationAddress || '';
                 addrEl.style.display = rec.locationAddress ? 'block' : 'none';
 
                 const mapQuery = rec.locationAddress || rec.locationName;
                 const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery);
-                const mapBtn = document.getElementById('detailMapBtn');
+                const mapBtn = document.getElementById(`${prefix}MapBtn`);
                 mapBtn.href = mapUrl;
                 mapBtn.onclick = (e) => openExternalUrl(e, mapUrl);
                 locCard.style.display = 'flex';
@@ -1757,12 +2219,10 @@
                 locCard.style.display = 'none';
             }
 
-            // 完整內文
-            document.getElementById('detailContent').innerHTML = formatDetailContentHtml(rec.content, kw);
+            document.getElementById(`${prefix}Content`).innerHTML = formatDetailContentHtml(rec.content, kw);
+            document.getElementById(`${prefix}JoinerCount`).textContent = `參與名單 (主揪 1 + 參加者 ${rec.joiners.length} 人)`;
 
-            // 主揪與參加者膠囊
-            document.getElementById('detailJoinerCount').textContent = `參與名單 (主揪 1 + 參加者 ${rec.joiners.length} 人)`;
-            const chipsWrap = document.getElementById('detailMemberChips');
+            const chipsWrap = document.getElementById(`${prefix}MemberChips`);
             const hostMatched = mbLower && rec.hostLower.includes(mbLower);
             let chipsHtml = `
                 <button type="button"
@@ -1792,10 +2252,49 @@
             }
             chipsWrap.innerHTML = chipsHtml;
 
-            // 捲動詳情內容回頂端並播放開啟動畫
-            const bodyEl = document.getElementById('detailBody');
+            const bodyEl = document.getElementById(`${prefix}Body`);
             if (bodyEl) bodyEl.scrollTop = 0;
+        }
 
+        function renderDesktopReadingPane(filteredPos, animate = true) {
+            const entry = filteredRecords[filteredPos];
+            const paneWrap = document.getElementById('paneContentWrap');
+            const paneEmpty = document.getElementById('paneEmpty');
+            const paneSk = document.getElementById('paneSkeleton');
+            if (!paneWrap || !paneEmpty) return;
+
+            if (paneSk) paneSk.style.display = 'none';
+            if (!entry) {
+                paneWrap.style.display = 'none';
+                paneEmpty.style.display = 'block';
+                return;
+            }
+
+            paneEmpty.style.display = 'none';
+            paneWrap.style.display = 'flex';
+            paneWrap.style.flexDirection = 'column';
+            paneWrap.style.minHeight = '0';
+
+            populateDetailView('pane', entry);
+
+            const paneBody = document.getElementById('paneBody');
+            const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (animate && paneBody && paneBody.animate && !prefersReduced) {
+                paneBody.animate([
+                    { opacity: 0.35, transform: 'translateY(8px)' },
+                    { opacity: 1, transform: 'translateY(0)' }
+                ], {
+                    duration: 220,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+                });
+            }
+        }
+
+        function openDetailModal(filteredPos) {
+            const entry = filteredRecords[filteredPos];
+            if (!entry) return;
+
+            populateDetailView('detail', entry);
             animateOpenSheet();
         }
 
@@ -2041,19 +2540,22 @@
 </head>
 
 <body>
-<div class="container">
+<div class="container" id="mainContainer">
     <header class="header-card">
         <div class="header-top">
             <div class="page-title-group">
                 <h1 class="page-title">📜 揪團大事記</h1>
                 <span class="count-pill" id="countPill">載入中...</span>
             </div>
-            <button type="button" class="btn-refresh" id="refreshBtn" title="重新整理紀錄" aria-label="重新整理紀錄">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
-            </button>
+            <div class="header-actions">
+                <button type="button" id="desktopToggleBtn" class="desktop-mode-btn active" title="切換雙欄電腦閱覽或單欄檢視">
+                    雙欄閱覽
+                </button>
+                <div class="view-mode-switch" role="group" aria-label="顯示模式切換">
+                    <button type="button" class="view-mode-btn active" data-view-mode="card">卡片</button>
+                    <button type="button" class="view-mode-btn" data-view-mode="compact">列表</button>
+                </div>
+            </div>
         </div>
 
         <div class="search-stack">
@@ -2095,45 +2597,120 @@
 
         <div class="filter-chips-bar">
             <button type="button" class="filter-chip active" data-status="all">全部</button>
-            <button type="button" class="filter-chip" data-status="圓滿結束">✅ 圓滿結束</button>
-            <button type="button" class="filter-chip" data-status="提前關團">⏸️ 提前關團</button>
-            <button type="button" class="filter-chip clear-all-chip" id="clearAllFiltersBtn" style="display: none;">清除 ✕</button>
+            <button type="button" class="filter-chip" data-status="圓滿結束">圓滿結束</button>
+            <button type="button" class="filter-chip" data-status="提前關團">提前關團</button>
             <button type="button" class="filter-chip sort-chip" id="sortToggleBtn">最新 ▾</button>
+        </div>
+
+        <div id="activeFilterCollapse" class="active-filter-collapse">
+            <div class="active-filter-inner">
+                <div class="active-filter-bar">
+                    <span>已套用篩選條件</span>
+                    <button type="button" id="clearAllFiltersBtn" class="btn-reset-filters">清除篩選 ✕</button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- 現代化載入骨架屏 -->
-    <div id="loadingSkeleton" aria-live="polite">
-        <div class="loading-banner">
-            <div class="spinner"></div>
-            <span>正在載入揪團大事記...</span>
+    <div class="workspace-grid">
+        <div class="list-pane">
+            <!-- 現代化載入骨架屏 -->
+            <div id="loadingSkeleton" aria-live="polite">
+                <div class="loading-banner">
+                    <div class="spinner"></div>
+                    <span>正在載入揪團大事記...</span>
+                </div>
+                <div class="skeleton-card">
+                    <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+                    <div class="sk-line sk-title"></div>
+                    <div class="sk-line sk-text-1"></div>
+                    <div class="sk-line sk-text-2"></div>
+                    <div class="sk-line sk-footer"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+                    <div class="sk-line sk-title"></div>
+                    <div class="sk-line sk-text-1"></div>
+                    <div class="sk-line sk-text-2"></div>
+                    <div class="sk-line sk-footer"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+                    <div class="sk-line sk-title"></div>
+                    <div class="sk-line sk-text-1"></div>
+                    <div class="sk-line sk-text-2"></div>
+                    <div class="sk-line sk-footer"></div>
+                </div>
+            </div>
+
+            <main id="historyList"></main>
+
+            <div id="listFooter"></div>
         </div>
-        <div class="skeleton-card">
-            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
-            <div class="sk-line sk-title"></div>
-            <div class="sk-line sk-text-1"></div>
-            <div class="sk-line sk-text-2"></div>
-            <div class="sk-line sk-footer"></div>
-        </div>
-        <div class="skeleton-card">
-            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
-            <div class="sk-line sk-title"></div>
-            <div class="sk-line sk-text-1"></div>
-            <div class="sk-line sk-text-2"></div>
-            <div class="sk-line sk-footer"></div>
-        </div>
-        <div class="skeleton-card">
-            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
-            <div class="sk-line sk-title"></div>
-            <div class="sk-line sk-text-1"></div>
-            <div class="sk-line sk-text-2"></div>
-            <div class="sk-line sk-footer"></div>
-        </div>
+
+        <!-- 電腦雙欄右側即時閱覽窗格 -->
+        <aside id="desktopDetailPane" class="desktop-detail-pane" aria-label="揪團詳情閱覽窗格">
+            <div id="paneSkeleton" class="pane-skeleton">
+                <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+                <div class="sk-line sk-title"></div>
+                <div class="sk-line sk-text-1"></div>
+                <div class="sk-line sk-text-1"></div>
+                <div class="sk-line sk-text-2"></div>
+            </div>
+
+            <div id="paneEmpty" class="pane-empty" style="display: none;">
+                <div class="empty-icon">📖</div>
+                <div class="empty-title">沒有可閱覽的揪團詳情</div>
+                <div class="empty-desc">請調整左側篩選條件，或點擊清單中的揪團項目。</div>
+            </div>
+
+            <div id="paneContentWrap" style="display: none;">
+                <div class="pane-header">
+                    <div class="sheet-header-meta">
+                        <span id="paneTopTime" class="time-badge"></span>
+                        <span id="paneStatusBadge" class="status-badge"></span>
+                    </div>
+                    <span class="pane-kbd-hint">可用 ↑ ↓ 鍵切換</span>
+                </div>
+
+                <div id="paneBody" class="pane-body">
+                    <h2 id="paneTitle" class="detail-title"></h2>
+
+                    <div class="detail-info-box">
+                        <div class="detail-info-row">
+                            <span class="detail-info-lbl">活動時間</span>
+                            <span id="paneActivityTime" class="detail-info-val"></span>
+                        </div>
+                        <div class="detail-info-row" id="paneHostDateRow">
+                            <span class="detail-info-lbl">發起日期</span>
+                            <span id="paneHostDate" class="detail-info-val"></span>
+                        </div>
+                    </div>
+
+                    <div id="paneLocationCard" class="detail-location-card" style="display: none;">
+                        <div class="detail-loc-text">
+                            <div class="detail-loc-name">📍 <span id="paneLocName"></span></div>
+                            <div id="paneLocAddr" class="detail-loc-addr"></div>
+                        </div>
+                        <a id="paneMapBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-map-link">地圖 ↗</a>
+                    </div>
+
+                    <div>
+                        <div class="detail-section-label"><span>📝 活動內容</span></div>
+                        <div id="paneContent" class="detail-content-box"></div>
+                    </div>
+
+                    <div>
+                        <div class="detail-section-label">
+                            <span id="paneJoinerCount">👥 參與名單</span>
+                            <span class="detail-section-hint">點擊名字可篩選該群友</span>
+                        </div>
+                        <div id="paneMemberChips" class="member-chips-wrap"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
-
-    <main id="historyList"></main>
-
-    <div id="listFooter"></div>
 </div>
 
 <button type="button" id="backToTopBtn" class="btn-back-top" aria-label="回到頂部">↑ 頂部</button>
