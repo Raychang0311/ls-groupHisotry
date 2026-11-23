@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <base target="_top" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>揪團大事記</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4a8c72;
+            --primary-dark: #3a6e59;
+            --primary-light: #e8f5e9;
+            --accent: #0D9488;
+            --bg: #f0f4f3;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --text-muted: #9ca3af;
+            --border-color: #e5e7eb;
+            --mark-bg: #fef08a;
+            --mark-text: #854d0e;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 12px 12px calc(40px + var(--safe-bottom));
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            min-width: 0;
+        }
+
+        /* 頂部置頂控制卡片 (Sticky Search & Filter) */
+        .header-card {
+            position: sticky;
+            top: 8px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.85);
+            border-radius: 18px;
+            padding: 14px 14px 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.25s ease;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .page-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+        }
+
+        .count-pill.bump {
+            transform: scale(1.06);
+        }
+
+        .btn-refresh {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            color: var(--text-sub);
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s, transform 0.15s;
+        }
+
+        .btn-refresh:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .btn-refresh:active {
+            transform: scale(0.94);
+        }
+
+        .btn-refresh.spinning svg {
+            animation: spin 0.9s linear infinite;
+        }
+
+        /* 搜尋輸入框組 */
+        .search-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.95rem;
+            pointer-events: none;
+            opacity: 0.75;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 42px;
+            padding: 8px 38px 8px 36px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 16px; /* 固定 16px 防止 iPhone X Safari / LINE 聚焦自動縮放 */
+            outline: none;
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(74, 140, 114, 0.15);
+        }
+
+        .btn-clear-input {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%) scale(0.85);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: #e5e7eb;
+            color: #4b5563;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+        }
+
+        .btn-clear-input.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(-50%) scale(1);
+        }
+
+        .btn-clear-input:active {
+            transform: translateY(-50%) scale(0.9);
+            background: #d1d5db;
+        }
+
+        /* 群友參與範圍平滑展開區塊 (含主揪 / 僅參加 / 僅主揪) */
+        .member-scope-collapse {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition: grid-template-rows 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, margin-top 0.24s ease;
+            margin-top: 0;
+        }
+
+        .member-scope-collapse.open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 2px;
+        }
+
+        .member-scope-inner {
+            overflow: hidden;
+        }
+
+        .member-scope-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 2px 2px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .member-scope-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scope-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .scope-chip {
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            background: #f9fafb;
+            color: var(--text-sub);
+            font-family: inherit;
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .scope-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        /* 狀態與排序橫向滑動膠囊列 */
+        .filter-chips-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-chips-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip {
+            flex-shrink: 0;
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: #f9fafb;
+            color: var(--text-sub);
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+        }
+
+        .filter-chip:active {
+            transform: scale(0.95);
+        }
+
+        .filter-chip.active {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        .filter-chip.sort-chip {
+            margin-left: auto;
+            background: #ffffff;
+            color: var(--text-main);
+        }
+
+        .filter-chip.clear-all-chip {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        /* 載入骨架屏與狀態區 */
+        #loadingSkeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: opacity 0.25s ease;
+        }
+
+        .loading-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--card-bg);
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid #d1e7dd;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .skeleton-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sk-line {
+            border-radius: 8px;
+            background: linear-gradient(90deg, #eef2f1 25%, #e2e8e6 37%, #eef2f1 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+        }
+
+        .sk-row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sk-pill { width: 120px; height: 22px; border-radius: 999px; }
+        .sk-badge { width: 68px; height: 22px; border-radius: 999px; }
+        .sk-title { width: 78%; height: 20px; }
+        .sk-text-1 { width: 100%; height: 14px; }
+        .sk-text-2 { width: 65%; height: 14px; }
+        .sk-footer { width: 55%; height: 18px; margin-top: 2px; }
+
+        @keyframes shimmer {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 列表容器 */
+        #historyList {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        #historyList.ready {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 精簡摘要歷史卡片 */
+        .history-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 14px 15px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.045);
+            border: 1px solid rgba(229, 231, 235, 0.75);
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+            min-width: 0;
+            position: relative;
+        }
+
+        .history-card.is-early-closed {
+            border-left-color: #9ca3af;
+        }
+
+        .history-card:hover {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-card:active {
+            transform: scale(0.985);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .history-card.card-enter {
+            opacity: 0;
+            animation: cardFadeSlideUp 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes cardFadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.985);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card-meta-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: var(--primary-light);
+            padding: 3px 9px;
+            border-radius: 999px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            flex-shrink: 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .status-done {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-closed {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .card-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.4;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .card-snippet {
+            font-size: 0.86rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        mark.hl {
+            background-color: var(--mark-bg);
+            color: var(--mark-text);
+            padding: 0 2px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .card-footer-tags {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #374151;
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 8px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .meta-tag.host-tag {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .meta-tag.match-role-tag {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            font-weight: 700;
+        }
+
+        .meta-tag.loc-tag {
+            background: #eff6ff;
+            color: #1e40af;
+            max-width: 180px;
+        }
+
+        .card-more-cue {
+            margin-left: auto;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        /* 空狀態與錯誤狀態 */
+        .empty-state {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 36px 20px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            animation: cardFadeSlideUp 0.3s ease forwards;
+        }
+
+        .empty-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .empty-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .empty-desc {
+            font-size: 0.86rem;
+            color: var(--text-sub);
+            margin-bottom: 14px;
+        }
+
+        .btn-primary-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 40px;
+            padding: 0 20px;
+            border: none;
+            border-radius: 999px;
+            background: var(--primary);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(74, 140, 114, 0.28);
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+
+        .btn-primary-pill:active {
+            transform: scale(0.96);
+        }
+
+        /* 載入更多與底部狀態 */
+        #listFooter {
+            text-align: center;
+            padding: 18px 0 8px;
+        }
+
+        .btn-load-more {
+            height: 42px;
+            padding: 0 22px;
+            border-radius: 999px;
+            border: 1.5px solid var(--primary);
+            background: #ffffff;
+            color: var(--primary-dark);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+        }
+
+        .btn-load-more:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-load-more:active {
+            transform: scale(0.96);
+        }
+
+        .footer-end-text {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        /* 回到頂部懸浮鈕 */
+        .btn-back-top {
+            position: fixed;
+            right: 16px;
+            bottom: calc(20px + var(--safe-bottom));
+            z-index: 90;
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(58, 110, 89, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transform: translateY(16px) scale(0.92);
+            pointer-events: none;
+            transition: opacity 0.24s ease, transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .btn-back-top.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .btn-back-top:active {
+            transform: scale(0.94);
+        }
+
+        /* 詳情 Bottom Sheet (手機) / Modal (桌面) */
+        .detail-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            background-color: rgba(0, 0, 0, 0);
+            padding: 0;
+        }
+
+        .detail-overlay.active {
+            display: flex;
+        }
+
+        .detail-overlay.blur-ready {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .detail-sheet {
+            width: 100%;
+            max-width: 600px;
+            max-height: 88vh;
+            max-height: 88dvh;
+            background: #ffffff;
+            border-radius: 22px 22px 0 0;
+            box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.22);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            will-change: transform, opacity;
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .sheet-drag-area {
+            padding: 10px 16px 12px;
+            border-bottom: 1px solid var(--border-color);
+            background: #ffffff;
+            flex-shrink: 0;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .sheet-handle {
+            width: 38px;
+            height: 4px;
+            border-radius: 999px;
+            background: #d1d5db;
+            margin: 0 auto 10px;
+        }
+
+        .sheet-header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .sheet-header-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .sheet-close-btn {
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.18s ease, transform 0.12s ease;
+        }
+
+        .sheet-close-btn:active {
+            transform: scale(0.92);
+            background: #e5e7eb;
+        }
+
+        .detail-body {
+            padding: 16px 18px 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .detail-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .detail-info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.88rem;
+            min-width: 0;
+        }
+
+        .detail-info-lbl {
+            color: var(--text-sub);
+            font-weight: 600;
+            width: 64px;
+            flex-shrink: 0;
+        }
+
+        .detail-info-val {
+            color: var(--text-main);
+            font-weight: 500;
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .detail-location-card {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .detail-loc-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .detail-loc-name {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            overflow-wrap: anywhere;
+        }
+
+        .detail-loc-addr {
+            font-size: 0.82rem;
+            color: #0369a1;
+            margin-top: 2px;
+            overflow-wrap: anywhere;
+        }
+
+        .btn-map-link {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 11px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #7dd3fc;
+            color: #0284c7;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-map-link:active {
+            background: #e0f2fe;
+        }
+
+        .detail-section-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .detail-section-hint {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .detail-content-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 13px 14px;
+            font-size: 0.94rem;
+            line-height: 1.68;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .detail-content-box a {
+            color: #0284c7;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .member-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .member-chip-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            border: 1px solid #c5e3d5;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: transform 0.12s ease, background-color 0.18s ease;
+        }
+
+        .member-chip-btn:active {
+            transform: scale(0.95);
+        }
+
+        .member-chip-btn.is-host {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .member-chip-btn.is-matched {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        /* 桌面版 (>640px) Modal 置中樣式 */
+        @media (min-width: 640px) {
+            body {
+                padding: 20px 16px 56px;
+            }
+
+            .header-card {
+                padding: 18px 20px 14px;
+            }
+
+            .detail-overlay {
+                align-items: center;
+                padding: 20px;
+            }
+
+            .detail-sheet {
+                border-radius: 20px;
+                max-height: 85vh;
+                box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25);
+                padding-bottom: 0;
+            }
+
+            .sheet-handle {
+                display: none;
+            }
+
+            .sheet-drag-area {
+                padding: 16px 20px 14px;
+            }
+
+            .detail-body {
+                padding: 18px 22px 24px;
+            }
+        }
+
+        /* 小螢幕 iPhone X (<=380px) 微調 */
+        @media (max-width: 380px) {
+            body {
+                padding: 10px 10px calc(36px + var(--safe-bottom));
+            }
+
+            .header-card {
+                padding: 12px 12px 10px;
+                border-radius: 16px;
+            }
+
+            .page-title {
+                font-size: 1.15rem;
+            }
+
+            .filter-chips-bar {
+                gap: 5px;
+            }
+
+            .filter-chip {
+                height: 30px;
+                padding: 0 9px;
+                font-size: 0.75rem;
+            }
+
+            .history-card {
+                padding: 12px 13px;
+            }
+        }
+
+        /* 尊重系統減少動態偏好 */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    <script>
+        // =========================================================================
+        // 前後端分離配置 (GitHub Pages 前端 + Google Apps Script 後端 API)
+        // =========================================================================
+        // 請確保此網址為已部署新版 groupHistory.js (含 getAllGroupHistory API) 之 GAS Web App /exec 網址
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxRSuUycyClSV6dw0HQ04PFue35by1DCiS4BW8eN1zNtrUjnNXu_WmOr8ltTzddreA4/exec";
+        const DISPLAY_BATCH_SIZE = 20;
+
+        let allRecords = [];
+        let filteredRecords = [];
+        let renderedCount = 0;
+        let isLoading = false;
+
+        const filterState = {
+            keyword: '',
+            memberQuery: '',
+            memberScope: 'all', // 'all' | 'joiner' | 'host'
+            status: 'all',      // 'all' | '圓滿結束' | '提前關團'
+            sortOrder: 'newest' // 'newest' | 'oldest'
+        };
+
+        let searchDebounceTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindEvents();
+            loadAllHistory();
+        });
+
+        function bindEvents() {
+            const keywordInput = document.getElementById('keywordInput');
+            const clearKeywordBtn = document.getElementById('clearKeywordBtn');
+            const memberInput = document.getElementById('memberInput');
+            const clearMemberBtn = document.getElementById('clearMemberBtn');
+
+            keywordInput.addEventListener('input', () => {
+                syncClearButtons();
+                scheduleFilterUpdate();
+            });
+
+            memberInput.addEventListener('input', () => {
+                syncClearButtons();
+                syncMemberScopeVisibility();
+                scheduleFilterUpdate();
+            });
+
+            clearKeywordBtn.addEventListener('click', () => {
+                keywordInput.value = '';
+                syncClearButtons();
+                applyFiltersAndRender();
+                keywordInput.focus();
+            });
+
+            clearMemberBtn.addEventListener('click', () => {
+                memberInput.value = '';
+                syncClearButtons();
+                syncMemberScopeVisibility();
+                applyFiltersAndRender();
+                memberInput.focus();
+            });
+
+            document.querySelectorAll('[data-scope]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterState.memberScope = btn.dataset.scope;
+                    document.querySelectorAll('[data-scope]').forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                    });
+                    applyFiltersAndRender();
+                });
+            });
+
+            document.querySelectorAll('[data-status]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterState.status = btn.dataset.status;
+                    document.querySelectorAll('[data-status]').forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                    });
+                    applyFiltersAndRender();
+                });
+            });
+
+            document.getElementById('sortToggleBtn').addEventListener('click', () => {
+                filterState.sortOrder = (filterState.sortOrder === 'newest') ? 'oldest' : 'newest';
+                document.getElementById('sortToggleBtn').textContent =
+                    filterState.sortOrder === 'newest' ? '最新 ▾' : '最舊 ▴';
+                applyFiltersAndRender();
+            });
+
+            document.getElementById('clearAllFiltersBtn').addEventListener('click', resetAllFilters);
+            document.getElementById('refreshBtn').addEventListener('click', () => loadAllHistory(true));
+            document.getElementById('backToTopBtn').addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            window.addEventListener('scroll', () => {
+                const btn = document.getElementById('backToTopBtn');
+                if (btn) {
+                    btn.classList.toggle('visible', window.scrollY > 360);
+                }
+            }, { passive: true });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeDetailModal();
+                }
+            });
+
+            bindSheetSwipeDismiss();
+        }
+
+        function syncClearButtons() {
+            const kw = document.getElementById('keywordInput').value;
+            const mb = document.getElementById('memberInput').value;
+            document.getElementById('clearKeywordBtn').classList.toggle('visible', kw.length > 0);
+            document.getElementById('clearMemberBtn').classList.toggle('visible', mb.length > 0);
+        }
+
+        function syncMemberScopeVisibility() {
+            const hasMember = document.getElementById('memberInput').value.trim().length > 0;
+            document.getElementById('memberScopeCollapse').classList.toggle('open', hasMember);
+        }
+
+        function scheduleFilterUpdate() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                applyFiltersAndRender();
+            }, 120);
+        }
+
+        function resetAllFilters() {
+            document.getElementById('keywordInput').value = '';
+            document.getElementById('memberInput').value = '';
+            filterState.keyword = '';
+            filterState.memberQuery = '';
+            filterState.memberScope = 'all';
+            filterState.status = 'all';
+            filterState.sortOrder = 'newest';
+
+            document.querySelectorAll('[data-scope]').forEach(b => b.classList.toggle('active', b.dataset.scope === 'all'));
+            document.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('active', b.dataset.status === 'all'));
+            document.getElementById('sortToggleBtn').textContent = '最新 ▾';
+
+            syncClearButtons();
+            syncMemberScopeVisibility();
+            applyFiltersAndRender();
+        }
+
+        /**
+         * 雙模 API 呼叫器 (相容 GAS google.script.run 與 GitHub Pages fetch)
+         */
+        function callGasApi(action, params, onSuccess, onFailure) {
+            const payload = Object.assign({}, params || {}, {
+                action: action,
+                _t: Date.now()
+            });
+
+            if (window.google && google.script && google.script.run) {
+                if (action === 'getAllGroupHistory') {
+                    google.script.run
+                        .withSuccessHandler(onSuccess)
+                        .withFailureHandler(err => onFailure && onFailure(err && err.message ? err.message : String(err)))
+                        .getAllGroupHistory();
+                    return;
+                }
+                if (action === 'getGroupHistory') {
+                    google.script.run
+                        .withSuccessHandler(onSuccess)
+                        .withFailureHandler(err => onFailure && onFailure(err && err.message ? err.message : String(err)))
+                        .getGroupHistory(payload.offset || 0, payload.pageSize || 20);
+                    return;
+                }
+            }
+
+            if (!GAS_API_URL || GAS_API_URL.includes('YOUR_GAS_DEPLOYMENT_ID')) {
+                if (onFailure) onFailure('GAS_API_URL 尚未設定');
+                return;
+            }
+
+            // 先嘗試 text/plain POST 避免觸發 CORS preflight，失敗時降級為 GET
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload),
+                cache: 'no-store'
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(onSuccess)
+                .catch(() => {
+                    const query = new URLSearchParams(payload).toString();
+                    fetch(GAS_API_URL + '?' + query, {
+                        method: 'GET',
+                        cache: 'no-store'
+                    })
+                        .then(res => {
+                            if (!res.ok) throw new Error('HTTP ' + res.status);
+                            return res.json();
+                        })
+                        .then(onSuccess)
+                        .catch(err => {
+                            if (onFailure) onFailure(err && err.message ? err.message : String(err));
+                        });
+                });
+        }
+
+        function loadAllHistory(isRefresh = false) {
+            if (isLoading) return;
+            isLoading = true;
+
+            const refreshBtn = document.getElementById('refreshBtn');
+            const skeleton = document.getElementById('loadingSkeleton');
+            const listEl = document.getElementById('historyList');
+            const footerEl = document.getElementById('listFooter');
+
+            if (isRefresh) {
+                refreshBtn.classList.add('spinning');
+            }
+            if (allRecords.length === 0) {
+                skeleton.style.display = 'flex';
+                skeleton.style.opacity = '1';
+                listEl.classList.remove('ready');
+                listEl.innerHTML = '';
+                footerEl.innerHTML = '';
+            }
+
+            callGasApi('getAllGroupHistory', {}, (response) => {
+                isLoading = false;
+                refreshBtn.classList.remove('spinning');
+
+                if (!response || response.success === false || !Array.isArray(response.historyList)) {
+                    const errMsg = (response && response.error) || '後端資料格式異常，請確認已重新部署最新版 groupHistory.js';
+                    showLoadError(errMsg);
+                    return;
+                }
+
+                allRecords = response.historyList.map((item, idx) => normalizeRecord(item, idx));
+                hideSkeletonAndReveal();
+                applyFiltersAndRender();
+            }, (err) => {
+                isLoading = false;
+                refreshBtn.classList.remove('spinning');
+                showLoadError('載入失敗：' + err);
+            });
+        }
+
+        function hideSkeletonAndReveal() {
+            const skeleton = document.getElementById('loadingSkeleton');
+            const listEl = document.getElementById('historyList');
+            skeleton.style.opacity = '0';
+            setTimeout(() => {
+                skeleton.style.display = 'none';
+                requestAnimationFrame(() => {
+                    listEl.classList.add('ready');
+                });
+            }, 180);
+        }
+
+        function showLoadError(message) {
+            const skeleton = document.getElementById('loadingSkeleton');
+            const listEl = document.getElementById('historyList');
+            const footerEl = document.getElementById('listFooter');
+            skeleton.style.display = 'none';
+            listEl.classList.add('ready');
+            footerEl.innerHTML = '';
+            listEl.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-title">無法讀取揪團紀錄</div>
+                    <div class="empty-desc">${escapeHtml(message)}</div>
+                    <button type="button" class="btn-primary-pill" onclick="loadAllHistory(true)">🔄 重新嘗試</button>
+                </div>
+            `;
+        }
+
+        function normalizeRecord(raw, idx) {
+            const content = String(raw && raw.content ? raw.content : '').replace(/\r\n?/g, '\n');
+            const lines = content.split('\n');
+            const firstNonEmptyIdx = lines.findIndex(l => l.trim() !== '');
+            const hostDate = String(raw && raw.hostDate ? raw.hostDate : '').trim();
+            const title = firstNonEmptyIdx !== -1
+                ? lines[firstNonEmptyIdx].trim()
+                : (hostDate ? `${hostDate} 的揪團` : '未命名揪團');
+
+            const bodyLines = firstNonEmptyIdx !== -1
+                ? lines.slice(firstNonEmptyIdx + 1)
+                : [];
+            const bodyText = bodyLines.join('\n').trim();
+
+            const startTime = String(raw && raw.startTime ? raw.startTime : '').trim();
+            const endTime = String(raw && raw.endTime ? raw.endTime : '').trim();
+            const host = String(raw && raw.host ? raw.host : '').trim() || '未知主揪';
+            const joinerRaw = String(raw && raw.joiner ? raw.joiner : '').trim();
+            const joiners = joinerRaw
+                ? joinerRaw.split(',').map(s => s.trim()).filter(Boolean)
+                : [];
+            const endType = String(raw && raw.endType ? raw.endType : '').trim() || '已結束';
+            const locationRaw = String(raw && raw.location ? raw.location : '').replace(/\r\n?/g, '\n').trim();
+            const locLines = locationRaw ? locationRaw.split('\n').map(l => l.trim()).filter(Boolean) : [];
+
+            return {
+                _idx: idx,
+                host: host,
+                hostLower: host.toLowerCase(),
+                hostDate: hostDate,
+                startTime: startTime,
+                endTime: endTime,
+                displayTime: buildDisplayTime(startTime, endTime, hostDate),
+                shortTime: buildShortTime(startTime, hostDate),
+                content: content,
+                contentLower: content.toLowerCase(),
+                title: title,
+                titleLower: title.toLowerCase(),
+                bodyText: bodyText,
+                joiners: joiners,
+                joinersLower: joiners.map(j => j.toLowerCase()),
+                endType: endType,
+                locationRaw: locationRaw,
+                locationName: locLines[0] || '',
+                locationAddress: locLines.slice(1).join(' ')
+            };
+        }
+
+        function buildDisplayTime(startTime, endTime, hostDate) {
+            if (startTime && endTime) {
+                // 若起訖同一天，縮寫結束時間為 HH:mm 讓小螢幕更易讀
+                const sParts = startTime.split(' ');
+                const eParts = endTime.split(' ');
+                if (sParts.length === 2 && eParts.length === 2 && sParts[0] === eParts[0]) {
+                    return `${startTime} ~ ${eParts[1]}`;
+                }
+                return `${startTime} ~ ${endTime}`;
+            }
+            if (startTime) return startTime;
+            if (endTime) return endTime;
+            return hostDate ? `發起日 ${hostDate}` : '未記錄時間';
+        }
+
+        function buildShortTime(startTime, hostDate) {
+            if (startTime) return startTime;
+            if (hostDate) return `發起 ${hostDate}`;
+            return '時間未記錄';
+        }
+
+        /**
+         * 核心篩選邏輯：關鍵字搜尋標題與內文 + 群友名稱文字篩選（含主揪）
+         */
+        function computeFilteredRecords() {
+            const kw = document.getElementById('keywordInput').value.trim();
+            const mb = document.getElementById('memberInput').value.trim();
+            filterState.keyword = kw;
+            filterState.memberQuery = mb;
+
+            const kwLower = kw.toLowerCase();
+            const mbLower = mb.toLowerCase();
+
+            const list = [];
+            for (let i = 0; i < allRecords.length; i++) {
+                const rec = allRecords[i];
+
+                if (filterState.status !== 'all' && rec.endType !== filterState.status) {
+                    continue;
+                }
+
+                if (kwLower) {
+                    const hitTitle = rec.titleLower.includes(kwLower);
+                    const hitContent = rec.contentLower.includes(kwLower);
+                    if (!hitTitle && !hitContent) continue;
+                }
+
+                let matchedAsHost = false;
+                let matchedAsJoiner = false;
+
+                if (mbLower) {
+                    matchedAsHost = rec.hostLower.includes(mbLower);
+                    matchedAsJoiner = rec.joinersLower.some(j => j.includes(mbLower));
+
+                    if (filterState.memberScope === 'host' && !matchedAsHost) continue;
+                    if (filterState.memberScope === 'joiner' && !matchedAsJoiner) continue;
+                    if (filterState.memberScope === 'all' && !matchedAsHost && !matchedAsJoiner) continue;
+                }
+
+                list.push({
+                    record: rec,
+                    matchedAsHost: matchedAsHost,
+                    matchedAsJoiner: matchedAsJoiner
+                });
+            }
+
+            if (filterState.sortOrder === 'oldest') {
+                list.reverse();
+            }
+
+            return list;
+        }
+
+        function applyFiltersAndRender() {
+            filteredRecords = computeFilteredRecords();
+            renderedCount = 0;
+
+            const hasActiveFilter = !!(
+                filterState.keyword ||
+                filterState.memberQuery ||
+                filterState.status !== 'all' ||
+                filterState.sortOrder !== 'newest'
+            );
+            document.getElementById('clearAllFiltersBtn').style.display = hasActiveFilter ? 'inline-flex' : 'none';
+
+            updateCountPill(filteredRecords.length, allRecords.length, hasActiveFilter);
+
+            const listEl = document.getElementById('historyList');
+            listEl.innerHTML = '';
+
+            if (filteredRecords.length === 0) {
+                document.getElementById('listFooter').innerHTML = '';
+                const emptyTitle = allRecords.length === 0 ? '目前沒有揪團歷史記錄' : '找不到符合條件的揪團';
+                const emptyDesc = allRecords.length === 0
+                    ? '待揪團結束歸檔後就會顯示在這裡。'
+                    : '試著調整關鍵字、群友暱稱或結束狀態篩選條件。';
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div class="empty-title">${emptyTitle}</div>
+                        <div class="empty-desc">${emptyDesc}</div>
+                        ${hasActiveFilter ? '<button type="button" class="btn-primary-pill" onclick="resetAllFilters()">清除全部篩選</button>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            renderNextBatch();
+        }
+
+        function updateCountPill(matchedCount, totalCount, isFiltered) {
+            const pill = document.getElementById('countPill');
+            if (!pill) return;
+            pill.textContent = isFiltered ? `符合 ${matchedCount} / ${totalCount} 團` : `共 ${totalCount} 團`;
+            pill.classList.remove('bump');
+            void pill.offsetWidth;
+            pill.classList.add('bump');
+            setTimeout(() => pill.classList.remove('bump'), 200);
+        }
+
+        function renderNextBatch() {
+            const listEl = document.getElementById('historyList');
+            const nextSlice = filteredRecords.slice(renderedCount, renderedCount + DISPLAY_BATCH_SIZE);
+            const kw = filterState.keyword;
+            const mb = filterState.memberQuery;
+
+            let html = '';
+            nextSlice.forEach((entry, idxInBatch) => {
+                const rec = entry.record;
+                const globalPos = renderedCount + idxInBatch;
+                const delayMs = Math.min(idxInBatch, 10) * 26;
+                const isEarlyClosed = rec.endType === '提前關團';
+                const statusClass = isEarlyClosed ? 'status-closed' : 'status-done';
+
+                const titleHtml = highlightText(rec.title, kw);
+                const snippetText = extractSearchSnippet(rec.bodyText, kw);
+                const snippetHtml = snippetText
+                    ? highlightText(snippetText, kw)
+                    : '<span style="color:#9ca3af;">（無額外內文，點擊查看詳情）</span>';
+
+                let roleBadgeHtml = '';
+                if (mb) {
+                    if (entry.matchedAsHost && entry.matchedAsJoiner) {
+                        roleBadgeHtml = '<span class="meta-tag match-role-tag">🎯 主揪 & 參加</span>';
+                    } else if (entry.matchedAsHost) {
+                        roleBadgeHtml = '<span class="meta-tag match-role-tag">🎯 擔任主揪</span>';
+                    } else if (entry.matchedAsJoiner) {
+                        roleBadgeHtml = '<span class="meta-tag match-role-tag">🎯 曾參加</span>';
+                    }
+                }
+
+                const locBadgeHtml = rec.locationName
+                    ? `<span class="meta-tag loc-tag">📍 ${escapeHtml(rec.locationName)}</span>`
+                    : '';
+
+                html += `
+                    <article class="history-card card-enter ${isEarlyClosed ? 'is-early-closed' : ''}"
+                             style="animation-delay: ${delayMs}ms"
+                             onclick="openDetailModal(${globalPos})"
+                             role="button"
+                             tabindex="0"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetailModal(${globalPos});}">
+                        <div class="card-meta-top">
+                            <span class="time-badge">📅 ${escapeHtml(rec.shortTime)}</span>
+                            <span class="status-badge ${statusClass}">${escapeHtml(rec.endType)}</span>
+                        </div>
+                        <div class="card-title">${titleHtml}</div>
+                        <div class="card-snippet">${snippetHtml}</div>
+                        <div class="card-footer-tags">
+                            <span class="meta-tag host-tag">👑 ${escapeHtml(rec.host)}</span>
+                            <span class="meta-tag">👥 ${rec.joiners.length} 人參加</span>
+                            ${roleBadgeHtml}
+                            ${locBadgeHtml}
+                            <span class="card-more-cue">詳情 ›</span>
+                        </div>
+                    </article>
+                `;
+            });
+
+            listEl.insertAdjacentHTML('beforeend', html);
+            renderedCount += nextSlice.length;
+            updateListFooter();
+        }
+
+        function updateListFooter() {
+            const footerEl = document.getElementById('listFooter');
+            const remaining = filteredRecords.length - renderedCount;
+            if (remaining > 0) {
+                footerEl.innerHTML = `
+                    <button type="button" class="btn-load-more" onclick="renderNextBatch()">
+                        顯示更多（還有 ${remaining} 團，目前已顯示 ${renderedCount}/${filteredRecords.length}）
+                    </button>
+                `;
+            } else {
+                footerEl.innerHTML = `<div class="footer-end-text">已顯示全部 ${filteredRecords.length} 筆符合紀錄</div>`;
+            }
+        }
+
+        /**
+         * 若有關鍵字且命中在較後方內文，擷取關鍵字前後文作為摘要視窗
+         */
+        function extractSearchSnippet(bodyText, keyword) {
+            if (!bodyText) return '';
+            const compact = bodyText.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+            if (!compact) return '';
+            if (!keyword) return compact;
+
+            const idx = compact.toLowerCase().indexOf(keyword.toLowerCase());
+            if (idx <= 28) return compact;
+
+            const start = Math.max(0, idx - 18);
+            return (start > 0 ? '…' : '') + compact.slice(start);
+        }
+
+        /**
+         * 先依關鍵字切片再各自 escapeHtml，確保高亮不會破壞 HTML 跳脫與 XSS 防護
+         */
+        function highlightText(text, keyword) {
+            const raw = String(text || '');
+            const kw = String(keyword || '').trim();
+            if (!kw) return escapeHtml(raw);
+
+            const regex = new RegExp(escapeRegExp(kw), 'gi');
+            let out = '';
+            let lastIdx = 0;
+            let match;
+
+            while ((match = regex.exec(raw)) !== null) {
+                if (match.index > lastIdx) {
+                    out += escapeHtml(raw.slice(lastIdx, match.index));
+                }
+                out += `<mark class="hl">${escapeHtml(match[0])}</mark>`;
+                lastIdx = regex.lastIndex;
+                if (match[0].length === 0) break;
+            }
+            if (lastIdx < raw.length) {
+                out += escapeHtml(raw.slice(lastIdx));
+            }
+            return out;
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function escapeHtml(text) {
+            return String(text ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        /**
+         * 安全將純文字內容轉換為含可點擊連結與關鍵字高亮的 HTML
+         */
+        function formatDetailContentHtml(content, keyword) {
+            const raw = String(content || '').trim();
+            if (!raw) return '<span style="color:#9ca3af;">（無內文）</span>';
+
+            const urlRegex = /(https?:\/\/[^\s"<>]+)/gi;
+            let out = '';
+            let lastIdx = 0;
+            let match;
+
+            while ((match = urlRegex.exec(raw)) !== null) {
+                if (match.index > lastIdx) {
+                    out += highlightText(raw.slice(lastIdx, match.index), keyword);
+                }
+                const url = match[0];
+                const safeUrl = escapeHtml(url);
+                out += `<a href="${safeUrl}" data-url="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="openExternalUrl(event, this.dataset.url)">${highlightText(url, keyword)}</a>`;
+                lastIdx = urlRegex.lastIndex;
+            }
+            if (lastIdx < raw.length) {
+                out += highlightText(raw.slice(lastIdx), keyword);
+            }
+            return out;
+        }
+
+        function openExternalUrl(event, url) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            if (!url || !/^https?:\/\//i.test(url)) return;
+
+            if (window.liff && typeof liff.isInClient === 'function' && liff.isInClient()) {
+                try {
+                    liff.openWindow({ url: url, external: true });
+                    return;
+                } catch (e) {}
+            }
+
+            let targetUrl = url;
+            if (/Line\//i.test(navigator.userAgent) && !/[?&]openExternalBrowser=1/i.test(targetUrl)) {
+                targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
+            }
+            window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        }
+
+        // =========================================================================
+        // 詳情 Bottom Sheet / Modal（WAAPI 滑順開關動畫 + 手勢下拉關閉）
+        // =========================================================================
+        const sheetAnimState = {
+            token: 0,
+            isOpen: false,
+            isClosing: false,
+            animations: []
+        };
+
+        function cancelSheetAnimations() {
+            sheetAnimState.animations.forEach(a => {
+                try { a.cancel(); } catch (e) {}
+            });
+            sheetAnimState.animations = [];
+        }
+
+        function openDetailModal(filteredPos) {
+            const entry = filteredRecords[filteredPos];
+            if (!entry) return;
+
+            const rec = entry.record;
+            const kw = filterState.keyword;
+            const mbLower = filterState.memberQuery.toLowerCase();
+
+            // 填充頂部狀態與時間
+            const statusEl = document.getElementById('detailStatusBadge');
+            const isEarlyClosed = rec.endType === '提前關團';
+            statusEl.textContent = rec.endType;
+            statusEl.className = `status-badge ${isEarlyClosed ? 'status-closed' : 'status-done'}`;
+
+            document.getElementById('detailTopTime').textContent = `📅 ${rec.shortTime}`;
+            document.getElementById('detailTitle').innerHTML = highlightText(rec.title, kw);
+
+            // 時間資訊區塊
+            document.getElementById('detailActivityTime').textContent = rec.displayTime;
+            const hostDateRow = document.getElementById('detailHostDateRow');
+            if (rec.hostDate) {
+                document.getElementById('detailHostDate').textContent = rec.hostDate;
+                hostDateRow.style.display = 'flex';
+            } else {
+                hostDateRow.style.display = 'none';
+            }
+
+            // 地點資訊卡片
+            const locCard = document.getElementById('detailLocationCard');
+            if (rec.locationName) {
+                document.getElementById('detailLocName').textContent = rec.locationName;
+                const addrEl = document.getElementById('detailLocAddr');
+                addrEl.textContent = rec.locationAddress || '';
+                addrEl.style.display = rec.locationAddress ? 'block' : 'none';
+
+                const mapQuery = rec.locationAddress || rec.locationName;
+                const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery);
+                const mapBtn = document.getElementById('detailMapBtn');
+                mapBtn.href = mapUrl;
+                mapBtn.onclick = (e) => openExternalUrl(e, mapUrl);
+                locCard.style.display = 'flex';
+            } else {
+                locCard.style.display = 'none';
+            }
+
+            // 完整內文
+            document.getElementById('detailContent').innerHTML = formatDetailContentHtml(rec.content, kw);
+
+            // 主揪與參加者膠囊
+            document.getElementById('detailJoinerCount').textContent = `參與名單 (主揪 1 + 參加者 ${rec.joiners.length} 人)`;
+            const chipsWrap = document.getElementById('detailMemberChips');
+            const hostMatched = mbLower && rec.hostLower.includes(mbLower);
+            let chipsHtml = `
+                <button type="button"
+                        class="member-chip-btn is-host ${hostMatched ? 'is-matched' : ''}"
+                        data-member-name="${escapeHtml(rec.host)}"
+                        onclick="filterByMemberName(this.dataset.memberName)"
+                        title="點擊篩選此主揪的所有揪團">
+                    👑 主揪：${escapeHtml(rec.host)}
+                </button>
+            `;
+
+            if (rec.joiners.length > 0) {
+                rec.joiners.forEach(name => {
+                    const isMatched = mbLower && name.toLowerCase().includes(mbLower);
+                    chipsHtml += `
+                        <button type="button"
+                                class="member-chip-btn ${isMatched ? 'is-matched' : ''}"
+                                data-member-name="${escapeHtml(name)}"
+                                onclick="filterByMemberName(this.dataset.memberName)"
+                                title="點擊篩選此群友的所有揪團">
+                            ${escapeHtml(name)}
+                        </button>
+                    `;
+                });
+            } else {
+                chipsHtml += `<span style="font-size:0.84rem;color:#9ca3af;padding:4px 2px;">無額外參加者</span>`;
+            }
+            chipsWrap.innerHTML = chipsHtml;
+
+            // 捲動詳情內容回頂端並播放開啟動畫
+            const bodyEl = document.getElementById('detailBody');
+            if (bodyEl) bodyEl.scrollTop = 0;
+
+            animateOpenSheet();
+        }
+
+        function animateOpenSheet() {
+            const overlay = document.getElementById('detailOverlay');
+            const sheet = document.getElementById('detailSheet');
+            if (!overlay || !sheet) return;
+
+            const token = ++sheetAnimState.token;
+            sheetAnimState.isOpen = true;
+            sheetAnimState.isClosing = false;
+            cancelSheetAnimations();
+
+            document.body.style.overflow = 'hidden';
+            overlay.classList.remove('blur-ready');
+            overlay.classList.add('active');
+            sheet.style.transform = '';
+            sheet.style.opacity = '';
+            overlay.style.backgroundColor = '';
+
+            const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!sheet.animate || prefersReduced) {
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.52)';
+                overlay.classList.add('blur-ready');
+                return;
+            }
+
+            const isDesktop = window.innerWidth >= 640;
+
+            const bgAnim = overlay.animate([
+                { backgroundColor: 'rgba(0, 0, 0, 0)' },
+                { backgroundColor: 'rgba(0, 0, 0, 0.52)' }
+            ], {
+                duration: isDesktop ? 280 : 320,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            const sheetAnim = sheet.animate(
+                isDesktop
+                    ? [
+                        { opacity: 0, transform: 'scale(0.93) translateY(18px)' },
+                        { opacity: 1, transform: 'scale(1) translateY(0)' }
+                    ]
+                    : [
+                        { transform: 'translate3d(0, 100%, 0)' },
+                        { transform: 'translate3d(0, 0, 0)' }
+                    ],
+                {
+                    duration: isDesktop ? 300 : 340,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                    fill: 'forwards'
+                }
+            );
+
+            sheetAnimState.animations = [bgAnim, sheetAnim];
+            Promise.all(sheetAnimState.animations.map(a => a.finished)).then(() => {
+                if (sheetAnimState.token !== token) return;
+                cancelSheetAnimations();
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.52)';
+                overlay.classList.add('blur-ready');
+                sheet.style.transform = '';
+                sheet.style.opacity = '';
+            }).catch(() => {});
+        }
+
+        function closeDetailModal(startOffsetY = 0) {
+            const overlay = document.getElementById('detailOverlay');
+            const sheet = document.getElementById('detailSheet');
+            if (!overlay || !sheet || !overlay.classList.contains('active') || sheetAnimState.isClosing) return;
+
+            const token = ++sheetAnimState.token;
+            sheetAnimState.isClosing = true;
+            cancelSheetAnimations();
+            overlay.classList.remove('blur-ready');
+
+            const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!sheet.animate || prefersReduced) {
+                finalizeCloseSheet();
+                return;
+            }
+
+            const isDesktop = window.innerWidth >= 640;
+            const currentBgOpacity = startOffsetY > 0
+                ? Math.max(0.1, 0.52 * (1 - startOffsetY / Math.max(sheet.offsetHeight, 320)))
+                : 0.52;
+
+            const bgAnim = overlay.animate([
+                { backgroundColor: `rgba(0, 0, 0, ${currentBgOpacity})` },
+                { backgroundColor: 'rgba(0, 0, 0, 0)' }
+            ], {
+                duration: 220,
+                easing: 'ease-in',
+                fill: 'forwards'
+            });
+
+            const sheetAnim = sheet.animate(
+                isDesktop
+                    ? [
+                        { opacity: 1, transform: 'scale(1) translateY(0)' },
+                        { opacity: 0, transform: 'scale(0.94) translateY(14px)' }
+                    ]
+                    : [
+                        { transform: `translate3d(0, ${startOffsetY}px, 0)` },
+                        { transform: 'translate3d(0, 100%, 0)' }
+                    ],
+                {
+                    duration: 240,
+                    easing: 'cubic-bezier(0.4, 0, 1, 1)',
+                    fill: 'forwards'
+                }
+            );
+
+            sheetAnimState.animations = [bgAnim, sheetAnim];
+            Promise.all(sheetAnimState.animations.map(a => a.finished)).then(() => {
+                if (sheetAnimState.token !== token) return;
+                finalizeCloseSheet();
+            }).catch(() => {
+                if (sheetAnimState.token === token) finalizeCloseSheet();
+            });
+        }
+
+        function finalizeCloseSheet() {
+            const overlay = document.getElementById('detailOverlay');
+            const sheet = document.getElementById('detailSheet');
+            cancelSheetAnimations();
+            sheetAnimState.isOpen = false;
+            sheetAnimState.isClosing = false;
+            overlay.classList.remove('active', 'blur-ready');
+            overlay.style.backgroundColor = '';
+            sheet.style.transform = '';
+            sheet.style.opacity = '';
+            document.body.style.overflow = '';
+        }
+
+        function bindSheetSwipeDismiss() {
+            const dragArea = document.getElementById('sheetDragArea');
+            const sheet = document.getElementById('detailSheet');
+            const overlay = document.getElementById('detailOverlay');
+            const detailBody = document.getElementById('detailBody');
+            if (!dragArea || !sheet || !overlay || !detailBody) return;
+
+            let startY = 0;
+            let startTime = 0;
+            let currentDeltaY = 0;
+            let isDragging = false;
+            let canPullFromBody = false;
+
+            const onTouchStart = (e, fromDragArea) => {
+                if (window.innerWidth >= 640 || sheetAnimState.isClosing) return;
+                if (e.touches.length !== 1) return;
+                if (!fromDragArea && detailBody.scrollTop > 0) {
+                    canPullFromBody = false;
+                    return;
+                }
+                canPullFromBody = true;
+                startY = e.touches[0].clientY;
+                startTime = Date.now();
+                currentDeltaY = 0;
+                isDragging = fromDragArea;
+            };
+
+            const onTouchMove = (e) => {
+                if (!canPullFromBody || window.innerWidth >= 640 || sheetAnimState.isClosing) return;
+                const dy = e.touches[0].clientY - startY;
+                if (dy <= 0) {
+                    if (isDragging) {
+                        currentDeltaY = 0;
+                        sheet.style.transform = 'translate3d(0, 0, 0)';
+                    }
+                    return;
+                }
+                if (!isDragging && detailBody.scrollTop <= 0 && dy > 8) {
+                    isDragging = true;
+                }
+                if (isDragging) {
+                    e.preventDefault();
+                    currentDeltaY = dy;
+                    sheet.style.transform = `translate3d(0, ${dy}px, 0)`;
+                    const ratio = Math.min(1, dy / Math.max(sheet.offsetHeight, 320));
+                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${(0.52 * (1 - ratio)).toFixed(3)})`;
+                }
+            };
+
+            const onTouchEnd = () => {
+                if (!isDragging || window.innerWidth >= 640 || sheetAnimState.isClosing) {
+                    isDragging = false;
+                    canPullFromBody = false;
+                    return;
+                }
+                const elapsed = Math.max(1, Date.now() - startTime);
+                const velocity = currentDeltaY / elapsed;
+                const shouldDismiss = currentDeltaY > 90 || (currentDeltaY > 36 && velocity > 0.45);
+
+                isDragging = false;
+                canPullFromBody = false;
+
+                if (shouldDismiss) {
+                    closeDetailModal(currentDeltaY);
+                } else if (currentDeltaY > 0 && sheet.animate) {
+                    const snapAnim = sheet.animate([
+                        { transform: `translate3d(0, ${currentDeltaY}px, 0)` },
+                        { transform: 'translate3d(0, 0, 0)' }
+                    ], {
+                        duration: 220,
+                        easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+                    });
+                    snapAnim.onfinish = () => {
+                        sheet.style.transform = '';
+                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.52)';
+                    };
+                } else {
+                    sheet.style.transform = '';
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.52)';
+                }
+            };
+
+            dragArea.addEventListener('touchstart', (e) => onTouchStart(e, true), { passive: true });
+            dragArea.addEventListener('touchmove', onTouchMove, { passive: false });
+            dragArea.addEventListener('touchend', onTouchEnd, { passive: true });
+            dragArea.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+            detailBody.addEventListener('touchstart', (e) => onTouchStart(e, false), { passive: true });
+            detailBody.addEventListener('touchmove', onTouchMove, { passive: false });
+            detailBody.addEventListener('touchend', onTouchEnd, { passive: true });
+            detailBody.addEventListener('touchcancel', onTouchEnd, { passive: true });
+        }
+
+        function filterByMemberName(memberName) {
+            const memberInput = document.getElementById('memberInput');
+            memberInput.value = memberName || '';
+            filterState.memberScope = 'all';
+            document.querySelectorAll('[data-scope]').forEach(b => {
+                b.classList.toggle('active', b.dataset.scope === 'all');
+            });
+            syncClearButtons();
+            syncMemberScopeVisibility();
+            closeDetailModal();
+            applyFiltersAndRender();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</head>
+
+<body>
+<div class="container">
+    <header class="header-card">
+        <div class="header-top">
+            <div class="page-title-group">
+                <h1 class="page-title">📜 揪團大事記</h1>
+                <span class="count-pill" id="countPill">載入中...</span>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshBtn" title="重新整理紀錄" aria-label="重新整理紀錄">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="search-stack">
+            <div class="input-wrap">
+                <span class="input-icon">🔍</span>
+                <input type="search"
+                       id="keywordInput"
+                       class="search-input"
+                       placeholder="搜尋標題或內文關鍵字..."
+                       autocomplete="off"
+                       enterkeyhint="search"
+                       aria-label="搜尋標題或內文關鍵字">
+                <button type="button" id="clearKeywordBtn" class="btn-clear-input" aria-label="清除關鍵字">✕</button>
+            </div>
+
+            <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input type="search"
+                       id="memberInput"
+                       class="search-input"
+                       placeholder="篩選群友參加過的團（輸入群友名稱）..."
+                       autocomplete="off"
+                       enterkeyhint="search"
+                       aria-label="篩選群友參加過的團">
+                <button type="button" id="clearMemberBtn" class="btn-clear-input" aria-label="清除群友篩選">✕</button>
+            </div>
+
+            <div id="memberScopeCollapse" class="member-scope-collapse">
+                <div class="member-scope-inner">
+                    <div class="member-scope-row">
+                        <span class="scope-label">參與角色：</span>
+                        <button type="button" class="scope-chip active" data-scope="all">全部 (含主揪)</button>
+                        <button type="button" class="scope-chip" data-scope="joiner">僅參加者</button>
+                        <button type="button" class="scope-chip" data-scope="host">僅主揪</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-chips-bar">
+            <button type="button" class="filter-chip active" data-status="all">全部</button>
+            <button type="button" class="filter-chip" data-status="圓滿結束">✅ 圓滿結束</button>
+            <button type="button" class="filter-chip" data-status="提前關團">⏸️ 提前關團</button>
+            <button type="button" class="filter-chip clear-all-chip" id="clearAllFiltersBtn" style="display: none;">清除 ✕</button>
+            <button type="button" class="filter-chip sort-chip" id="sortToggleBtn">最新 ▾</button>
+        </div>
+    </header>
+
+    <!-- 現代化載入骨架屏 -->
+    <div id="loadingSkeleton" aria-live="polite">
+        <div class="loading-banner">
+            <div class="spinner"></div>
+            <span>正在載入揪團大事記...</span>
+        </div>
+        <div class="skeleton-card">
+            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+            <div class="sk-line sk-title"></div>
+            <div class="sk-line sk-text-1"></div>
+            <div class="sk-line sk-text-2"></div>
+            <div class="sk-line sk-footer"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+            <div class="sk-line sk-title"></div>
+            <div class="sk-line sk-text-1"></div>
+            <div class="sk-line sk-text-2"></div>
+            <div class="sk-line sk-footer"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="sk-row-between"><div class="sk-line sk-pill"></div><div class="sk-line sk-badge"></div></div>
+            <div class="sk-line sk-title"></div>
+            <div class="sk-line sk-text-1"></div>
+            <div class="sk-line sk-text-2"></div>
+            <div class="sk-line sk-footer"></div>
+        </div>
+    </div>
+
+    <main id="historyList"></main>
+
+    <div id="listFooter"></div>
+</div>
+
+<button type="button" id="backToTopBtn" class="btn-back-top" aria-label="回到頂部">↑ 頂部</button>
+
+<!-- 揪團詳情 Bottom Sheet / Modal -->
+<div id="detailOverlay" class="detail-overlay" onclick="if(event.target===this) closeDetailModal()">
+    <div id="detailSheet" class="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+        <div id="sheetDragArea" class="sheet-drag-area">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header-row">
+                <div class="sheet-header-meta">
+                    <span id="detailTopTime" class="time-badge"></span>
+                    <span id="detailStatusBadge" class="status-badge"></span>
+                </div>
+                <button type="button" class="sheet-close-btn" onclick="closeDetailModal()" aria-label="關閉詳情">✕</button>
+            </div>
+        </div>
+
+        <div id="detailBody" class="detail-body">
+            <h2 id="detailTitle" class="detail-title"></h2>
+
+            <div class="detail-info-box">
+                <div class="detail-info-row">
+                    <span class="detail-info-lbl">活動時間</span>
+                    <span id="detailActivityTime" class="detail-info-val"></span>
+                </div>
+                <div class="detail-info-row" id="detailHostDateRow">
+                    <span class="detail-info-lbl">發起日期</span>
+                    <span id="detailHostDate" class="detail-info-val"></span>
+                </div>
+            </div>
+
+            <div id="detailLocationCard" class="detail-location-card" style="display: none;">
+                <div class="detail-loc-text">
+                    <div class="detail-loc-name">📍 <span id="detailLocName"></span></div>
+                    <div id="detailLocAddr" class="detail-loc-addr"></div>
+                </div>
+                <a id="detailMapBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-map-link">地圖 ↗</a>
+            </div>
+
+            <div>
+                <div class="detail-section-label"><span>📝 活動內容</span></div>
+                <div id="detailContent" class="detail-content-box"></div>
+            </div>
+
+            <div>
+                <div class="detail-section-label">
+                    <span id="detailJoinerCount">👥 參與名單</span>
+                    <span class="detail-section-hint">點擊名字可篩選該群友</span>
+                </div>
+                <div id="detailMemberChips" class="member-chips-wrap"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
