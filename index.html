@@ -1522,16 +1522,17 @@
             animation: spin 0.75s linear infinite;
         }
 
+        .swal2-container {
+            z-index: 3000 !important;
+        }
+
         .gh-comment-composer {
-            position: sticky;
-            top: 0;
-            z-index: 5;
             background: #ffffff;
             border: 1px solid #d1d5db;
             border-radius: 12px;
             padding: 10px 12px;
             margin-bottom: 12px;
-            box-shadow: 0 6px 16px -12px rgba(0, 0, 0, 0.16);
+            box-shadow: 0 4px 12px -10px rgba(0, 0, 0, 0.14);
         }
 
         .gh-replying-bar {
@@ -1763,9 +1764,22 @@
             color: var(--primary-dark);
         }
 
-        .gh-comment-act-btn.is-danger:hover {
+        .gh-comment-act-btn.is-danger:hover:not(:disabled) {
             border-color: #dc2626;
             color: #dc2626;
+        }
+
+        .gh-comment-act-btn.is-save {
+            border-color: var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .gh-comment-act-btn:disabled {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: #94a3b8;
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         .gh-comment-edit-box {
@@ -2882,10 +2896,10 @@
                     } else if (isEditing) {
                         bodyHtml = `
                             <div class="gh-comment-edit-box">
-                                <textarea id="${prefix}EditInput_${c.floor}" class="gh-comment-input" maxlength="500">${escapeHtml(c.content)}</textarea>
+                                <textarea id="${prefix}EditInput_${c.floor}" class="gh-comment-input" maxlength="500" oninput="handleEditInput('${prefix}', ${c.floor})">${escapeHtml(c.content)}</textarea>
                                 <div class="gh-comment-edit-actions">
                                     <button type="button" class="gh-comment-act-btn" onclick="cancelEditComment('${prefix}')">取消</button>
-                                    <button type="button" class="gh-comment-act-btn" style="border-color:var(--primary-dark);color:var(--primary-dark);" onclick="saveEditComment('${prefix}', ${c.floor})">儲存</button>
+                                    <button type="button" id="${prefix}SaveEditBtn_${c.floor}" class="gh-comment-act-btn is-save" onclick="saveEditComment('${prefix}', ${c.floor})" disabled>儲存</button>
                                 </div>
                             </div>`;
                     } else {
@@ -2921,9 +2935,8 @@
 
             container.innerHTML = `
                 <div class="gh-comments-head">
-                    <span class="detail-section-label" style="margin:0;">💬 留言討論區 (${totalFloors} 樓)</span>
+                    <span class="detail-section-label" id="${prefix}CommentsTitle" style="margin:0;">💬 留言討論區 (${totalFloors} 則)</span>
                     <div class="gh-comments-head-right">
-                        <span class="detail-section-hint">由舊到新排列</span>
                         <button type="button" id="${prefix}CmtRefreshBtn" class="gh-cmt-refresh-btn ${st.refreshing ? 'is-spinning' : ''}" onclick="refreshComments('${prefix}')" aria-label="重新整理留言區" title="重新整理留言">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
@@ -2943,7 +2956,8 @@
             `;
         }
 
-        function syncUpdatedComments(rec, rawComments) {
+        function syncUpdatedComments(rec, rawComments, opts) {
+            const preserveDraft = Boolean(opts && opts.preserveDraft);
             rec.comments = normalizeComments(rawComments);
             const totalFloors = rec.comments.length;
             document.querySelectorAll('[data-cmt-count]').forEach(el => {
@@ -2962,8 +2976,8 @@
                 if (st.rec !== rec) return;
                 if (st.editingFloor !== null) return;
                 const prevIn = document.getElementById(`${p}CommentInput`);
-                const draft = prevIn ? prevIn.value : '';
-                const focused = prevIn && document.activeElement === prevIn;
+                const draft = preserveDraft && prevIn ? prevIn.value : '';
+                const focused = preserveDraft && prevIn && document.activeElement === prevIn;
                 renderCommentsSection(p, rec);
                 if (draft) {
                     const nextIn = document.getElementById(`${p}CommentInput`);
@@ -2994,7 +3008,7 @@
                 if (btnNow) btnNow.classList.remove('is-spinning');
                 if (!res || !res.success || !Array.isArray(res.comments)) return;
                 if (res.rowIndex) rec.rowIndex = res.rowIndex;
-                syncUpdatedComments(rec, res.comments);
+                syncUpdatedComments(rec, res.comments, { preserveDraft: true });
             }, () => {
                 if (st.fetchToken !== token) return;
                 st.refreshing = false;
@@ -3070,7 +3084,8 @@
                 if (res.rowIndex) rec.rowIndex = res.rowIndex;
                 st.replyTo = null;
                 st.replyToName = '';
-                syncUpdatedComments(rec, res.comments);
+                if (input) input.value = '';
+                syncUpdatedComments(rec, res.comments, { preserveDraft: false });
                 if (res.addedFloor) scrollToCommentFloor(prefix, res.addedFloor);
             }, err => {
                 st.busy = false;
@@ -3086,6 +3101,19 @@
             renderCommentsSection(prefix, st.rec);
             const box = document.getElementById(`${prefix}EditInput_${floor}`);
             if (box) box.focus();
+            handleEditInput(prefix, floor);
+        }
+
+        function handleEditInput(prefix, floor) {
+            const st = commentUiState[prefix];
+            if (!st || !st.rec) return;
+            const box = document.getElementById(`${prefix}EditInput_${floor}`);
+            const saveBtn = document.getElementById(`${prefix}SaveEditBtn_${floor}`);
+            if (!box || !saveBtn) return;
+            const orig = (st.rec.comments || []).find(c => c.floor === floor);
+            const origTrim = String((orig && orig.content) || '').trim();
+            const curTrim = box.value.trim();
+            saveBtn.disabled = !curTrim || curTrim === origTrim;
         }
 
         function cancelEditComment(prefix) {
@@ -3100,12 +3128,13 @@
             if (!st || !st.rec || st.busy) return;
             const box = document.getElementById(`${prefix}EditInput_${floor}`);
             const text = box ? box.value.trim() : '';
-            if (!text) {
-                Swal.fire({ icon: 'warning', title: '留言內容不能為空', confirmButtonColor: '#3a6e59' });
-                return;
-            }
+            const orig = (st.rec.comments || []).find(c => c.floor === floor);
+            const origTrim = String((orig && orig.content) || '').trim();
+            if (!text || text === origTrim) return;
+
             const rec = st.rec;
             st.busy = true;
+            Swal.fire({ title: '儲存中...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
             callGasApi('editHistoryComment', {
                 rowIndex: rec.rowIndex,
                 rowKey: rec.rowKey,
@@ -3118,9 +3147,10 @@
                     Swal.fire({ icon: 'error', title: '修改失敗', text: (res && res.error) || '發生未知錯誤', confirmButtonColor: '#3a6e59' });
                     return;
                 }
+                Swal.close();
                 if (res.rowIndex) rec.rowIndex = res.rowIndex;
                 st.editingFloor = null;
-                syncUpdatedComments(rec, res.comments);
+                syncUpdatedComments(rec, res.comments, { preserveDraft: true });
             }, err => {
                 st.busy = false;
                 Swal.fire({ icon: 'error', title: '系統錯誤', text: '修改留言失敗：' + err, confirmButtonColor: '#3a6e59' });
@@ -3133,8 +3163,7 @@
             const rec = st.rec;
             Swal.fire({
                 icon: 'warning',
-                title: `確定要刪除 #${floor} 的留言嗎？`,
-                text: '刪除後該樓層將會保留並顯示為「留言已刪除」。',
+                title: `確定要刪除留言嗎？`,
                 showCancelButton: true,
                 confirmButtonColor: '#c53030',
                 cancelButtonColor: '#6b7280',
