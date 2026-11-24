@@ -2306,8 +2306,8 @@
                         floor: floorNum,
                         time: String(c.time || '').trim(),
                         userId: String(c.userId || '').trim(),
-                        userName: String(c.userName || '群友'),
-                        userPic: String(c.userPic || 'https://imgur.com/786FxAA.jpg'),
+                        userName: String(c.userName || '已退群成員'),
+                        userPic: String(c.userPic || 'https://obs.line-scdn.net/0hTp0LmYC8C18NNRtkYlJ0CF1oAD0-VxVULwEfOChdVgh7VjpTMi8tWiheVmYjfhN1OQMbSSlOCg8obj5iMTIhTnJlHgxgVjVudjgPRmlJIB98VSkIdw/f256x256'),
                         content: isDel ? '' : String(c.content || ''),
                         replyTo: rNum,
                         deleted: isDel ? 'Y' : '',
@@ -2883,8 +2883,8 @@
                     const isDeleted = c.deleted === 'Y';
                     const isMine = Boolean(uidLower && c.userId && c.userId.toLowerCase() === uidLower);
                     const isEditing = !isDeleted && isMine && st.editingFloor === c.floor;
-                    const safePic = escapeHtml(c.userPic || 'https://imgur.com/786FxAA.jpg');
-                    const safeName = escapeHtml(c.userName || '群友');
+                    const safePic = escapeHtml(c.userPic || 'https://obs.line-scdn.net/0hTp0LmYC8C18NNRtkYlJ0CF1oAD0-VxVULwEfOChdVgh7VjpTMi8tWiheVmYjfhN1OQMbSSlOCg8obj5iMTIhTnJlHgxgVjVudjgPRmlJIB98VSkIdw/f256x256');
+                    const safeName = escapeHtml(c.userName || '已退群成員');
 
                     const replyBadgeHtml = c.replyTo
                         ? `<button type="button" class="gh-reply-ref" onclick="scrollToCommentFloor('${prefix}', ${c.replyTo})">↳ 回覆 #${c.replyTo}</button>`
