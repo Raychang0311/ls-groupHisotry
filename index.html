@@ -2004,6 +2004,11 @@
             document.querySelectorAll('[data-status]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     filterState.status = btn.dataset.status;
+                    if (filterState.status === 'latestComment') {
+                        filterState.sortOrder = 'newest';
+                        const sortBtn = document.getElementById('sortToggleBtn');
+                        if (sortBtn) sortBtn.textContent = '最新 ▾';
+                    }
                     document.querySelectorAll('[data-status]').forEach(b => {
                         b.classList.toggle('active', b === btn);
                     });
@@ -2392,6 +2397,40 @@
         /**
          * 核心篩選邏輯：關鍵字搜尋標題與內文 + 群友名稱文字篩選（含主揪）
          */
+        function parseCommentTimeMs(str) {
+            const raw = String(str || '').trim();
+            if (!raw) return 0;
+            const m = raw.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[\sT]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            if (m) {
+                return new Date(
+                    parseInt(m[1], 10),
+                    parseInt(m[2], 10) - 1,
+                    parseInt(m[3], 10),
+                    parseInt(m[4] || '0', 10),
+                    parseInt(m[5] || '0', 10),
+                    parseInt(m[6] || '0', 10)
+                ).getTime();
+            }
+            const parsed = Date.parse(raw.replace(/\//g, '-'));
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function getLatestCommentMeta(rec) {
+            const comments = Array.isArray(rec && rec.comments) ? rec.comments : [];
+            let activeCount = 0;
+            let latestMs = 0;
+            let latestFloor = 0;
+            for (let i = 0; i < comments.length; i++) {
+                const c = comments[i];
+                if (!c || c.deleted === 'Y') continue;
+                activeCount++;
+                const ts = parseCommentTimeMs(c.time);
+                if (ts > latestMs) latestMs = ts;
+                if (c.floor > latestFloor) latestFloor = c.floor;
+            }
+            return { activeCount, latestMs, latestFloor };
+        }
+
         function computeFilteredRecords() {
             const kw = document.getElementById('keywordInput').value.trim();
             const mb = document.getElementById('memberInput').value.trim();
@@ -2400,12 +2439,20 @@
 
             const kwLower = kw.toLowerCase();
             const mbLower = mb.toLowerCase();
+            const isLatestCommentMode = filterState.status === 'latestComment';
 
             const list = [];
             for (let i = 0; i < allRecords.length; i++) {
                 const rec = allRecords[i];
+                let latestCommentMs = 0;
+                let latestCommentFloor = 0;
 
-                if (filterState.status !== 'all' && rec.endType !== filterState.status) {
+                if (isLatestCommentMode) {
+                    const meta = getLatestCommentMeta(rec);
+                    if (meta.activeCount === 0) continue;
+                    latestCommentMs = meta.latestMs;
+                    latestCommentFloor = meta.latestFloor;
+                } else if (filterState.status !== 'all' && rec.endType !== filterState.status) {
                     continue;
                 }
 
@@ -2430,11 +2477,22 @@
                 list.push({
                     record: rec,
                     matchedAsHost: matchedAsHost,
-                    matchedAsJoiner: matchedAsJoiner
+                    matchedAsJoiner: matchedAsJoiner,
+                    latestCommentMs: latestCommentMs,
+                    latestCommentFloor: latestCommentFloor
                 });
             }
 
-            if (filterState.sortOrder === 'oldest') {
+            if (isLatestCommentMode) {
+                list.sort((a, b) => {
+                    const diff = b.latestCommentMs - a.latestCommentMs;
+                    if (diff !== 0) return diff;
+                    return b.latestCommentFloor - a.latestCommentFloor;
+                });
+                if (filterState.sortOrder === 'oldest') {
+                    list.reverse();
+                }
+            } else if (filterState.sortOrder === 'oldest') {
                 list.reverse();
             }
 
@@ -3557,6 +3615,7 @@
             <button type="button" class="filter-chip active" data-status="all">全部</button>
             <button type="button" class="filter-chip" data-status="圓滿結束">圓滿結束</button>
             <button type="button" class="filter-chip" data-status="提前關團">提前關團</button>
+            <button type="button" class="filter-chip" data-status="latestComment">💬 最新留言</button>
             <button type="button" class="filter-chip sort-chip" id="sortToggleBtn">最新 ▾</button>
         </div>
 
