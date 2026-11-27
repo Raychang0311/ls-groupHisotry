@@ -3951,10 +3951,6 @@
             <button type="button" class="icon-close-btn" onclick="closeStandaloneAlbumPicker()" aria-label="關閉">✕</button>
         </div>
         <div id="ghPickerTargetName" class="gh-picker-target"></div>
-        <div class="gh-picker-url-row">
-            <input type="text" id="ghPickerUrlInput" placeholder="直接貼上 Google Drive 資料夾連結或 ID..." autocomplete="off">
-            <button type="button" id="ghPickerUrlBindBtn" class="gh-btn is-primary" onclick="submitStandaloneAlbumUrl()">綁定</button>
-        </div>
         <input type="text" id="ghPickerFilterInput" class="gh-picker-filter-in" placeholder="搜尋總資料夾內的相簿名稱..." oninput="filterStandalonePickerFolders(this.value)" autocomplete="off">
         <div id="ghPickerFolderList" class="gh-folder-list"></div>
         <div class="submodal-actions">
@@ -4020,7 +4016,7 @@
                 <div class="gh-album-card is-empty">
                     <div class="gh-album-card__info">
                         <div class="gh-album-card__title">📷 尚未綁定活動相簿</div>
-                        <div class="gh-album-card__sub">僅管理群可見：可從總資料夾選擇或直貼 Google Drive 連結</div>
+                        <div class="gh-album-card__sub">僅管理群可見：可從總資料夾清單中選擇對應活動相簿</div>
                     </div>
                     <div class="gh-album-card__actions">
                         <button type="button" class="gh-btn" onclick="openStandaloneAlbumPicker('${prefix}')">🔗 綁定相簿</button>
@@ -4047,7 +4043,6 @@
         standalonePicker.filterText = '';
         standalonePicker.busy = false;
         document.getElementById('ghPickerTargetName').textContent = `目標活動：${rec.title}（${rec.shortTime}）`;
-        document.getElementById('ghPickerUrlInput').value = rec.albumFolderId ? `https://drive.google.com/drive/folders/${rec.albumFolderId}?usp=drive_link` : '';
         document.getElementById('ghPickerFilterInput').value = '';
         document.getElementById('ghPickerUnbindBtn').style.display = rec.albumFolderId ? 'inline-flex' : 'none';
         document.getElementById('ghAlbumPickerOverlay').classList.add('is-open');
@@ -4095,16 +4090,6 @@
                 <button type="button" class="gh-btn" onclick="executeStandaloneBind('${escapeHtml(f.id)}')">✅ 綁定</button>
             </div>
         `).join('');
-    }
-
-    function submitStandaloneAlbumUrl() {
-        const val = (document.getElementById('ghPickerUrlInput').value || '').trim();
-        if (!val) { Swal.fire({ icon: 'warning', title: '請貼上資料夾連結', confirmButtonColor: '#3a6e59' }); return; }
-        executeStandaloneBind(val);
-    }
-
-    function bindStandaloneCurrentFolder() {
-        if (standalonePicker.currentFolderId) executeStandaloneBind(standalonePicker.currentFolderId);
     }
 
     function unbindStandaloneAlbum() {
