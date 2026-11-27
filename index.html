@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root {
@@ -1803,6 +1804,82 @@
                 transition-duration: 0.01ms !important;
             }
         }
+        /* Phase 2：大事記相簿卡片、管理群綁定彈窗與共用相簿檢視抽屜／滑動縮放燈箱 */
+        .gh-album-card { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--primary-light); border: 1px solid #c5e3d5; }
+        .gh-album-card.is-empty { background: #f8fafc; border-color: var(--border-color); }
+        .gh-album-card__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .gh-album-card__title { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
+        .gh-album-card__sub { font-size: 0.78rem; color: var(--text-sub); }
+        .gh-album-card__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .gh-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-color); background: #ffffff; color: var(--text-main); font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
+        .gh-btn.is-primary { background: var(--primary-dark); border-color: var(--primary-dark); color: #ffffff; }
+        .gh-btn.is-danger { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+        .gh-btn.is-active { background: var(--primary-dark); border-color: var(--primary-dark); color: #ffffff; }
+        .gh-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .drawer-overlay { position: fixed; inset: 0; z-index: 2100; background: rgba(16, 26, 22, 0.52); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 16px; }
+        .drawer-overlay.is-open { display: flex; }
+        .drawer-panel.detail-drawer { position: relative; width: 100%; max-width: 820px; max-height: 90vh; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255, 255, 255, 0.88); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 56px rgba(15, 23, 20, 0.32); }
+        .detail-drawer .drawer-header { position: absolute; top: 12px; left: 14px; right: 14px; z-index: 25; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px 8px 14px; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.82); background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(240,248,245,0.45)); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); box-shadow: 0 12px 28px -12px rgba(16,26,22,0.24), inset 0 1.5px 0 rgba(255,255,255,0.95); }
+        .drawer-header__meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+        .detail-drawer .drawer-body { padding: 92px 20px 24px; overflow-y: auto; flex: 1; }
+        .meta-pill, .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: var(--text-sub); }
+        .status-pill.is-done { background: var(--primary-light); color: var(--primary-dark); }
+        .icon-close-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.85); background: rgba(255,255,255,0.82); color: var(--text-main); font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .album-viewer-hero { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .album-viewer-sub { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 10px; }
+        .album-viewer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .album-batch-bar { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; margin-bottom: 14px; border-radius: 12px; background: var(--primary-light); border: 1px solid #c5e3d5; }
+        .album-batch-bar__top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .album-batch-count { font-size: 0.84rem; font-weight: 700; color: var(--primary-dark); }
+        .album-batch-bar__btns { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .album-batch-progress { font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+        .album-media-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        @media (min-width: 680px) { .album-media-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; } }
+        .album-media-tile { position: relative; aspect-ratio: 1 / 1; border: 2px solid transparent; padding: 0; border-radius: 10px; overflow: hidden; background: #e2ebe7; cursor: pointer; display: block; }
+        .album-media-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .album-media-tile.is-selected { border-color: var(--primary-dark); }
+        .album-video-badge { position: absolute; left: 6px; bottom: 6px; padding: 2px 7px; border-radius: 999px; background: rgba(15,23,20,0.74); color: #fff; font-size: 0.7rem; font-weight: 700; }
+        .album-select-check { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; background: rgba(15,23,20,0.45); color: #fff; font-size: 0.82rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+        .album-select-check.is-checked { background: var(--primary-dark); }
+        .album-select-disabled { position: absolute; top: 6px; right: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(15,23,20,0.65); color: #e2e8f0; font-size: 0.68rem; }
+        .album-lightbox { position: fixed; inset: 0; z-index: 2500; background: rgba(10,16,14,0.94); display: none; flex-direction: column; justify-content: space-between; padding: max(12px, env(safe-area-inset-top, 12px)) 14px max(16px, env(safe-area-inset-bottom, 16px)); }
+        .album-lightbox.active { display: flex; }
+        .album-lb-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #fff; min-height: 44px; }
+        .album-lb-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .album-lb-counter { font-size: 0.84rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.14); flex-shrink: 0; }
+        .album-lb-name { font-size: 0.84rem; color: rgba(255,255,255,0.82); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .album-lb-stage { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 12px 0; overflow: hidden; touch-action: none; user-select: none; }
+        .album-lb-img-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; max-width: 100%; max-height: 100%; touch-action: none; }
+        .album-lb-img-wrap img { max-width: min(92vw, 1080px); max-height: calc(100vh - 190px); border-radius: 12px; object-fit: contain; transform-origin: center center; will-change: transform; touch-action: none; user-select: none; -webkit-user-drag: none; cursor: zoom-in; }
+        .album-lb-img-wrap img.is-zoomed { cursor: grab; }
+        .album-lb-img-wrap img.is-dragging { cursor: grabbing; }
+        .album-lb-video-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 0.86rem; font-weight: 700; text-decoration: none; }
+        .album-lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(20,28,25,0.65); color: #fff; font-size: 1.6rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; z-index: 2; }
+        .album-lb-nav.is-prev { left: 6px; }
+        .album-lb-nav.is-next { right: 6px; }
+        .album-lb-toolbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .album-lb-zoom-group { display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); overflow: hidden; }
+        .album-lb-zoom-btn, .album-lb-zoom-pct { border: none; background: transparent; color: #fff; font-family: inherit; min-height: 36px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .album-lb-zoom-btn { width: 36px; font-size: 1rem; font-weight: 700; }
+        .album-lb-zoom-pct { min-width: 54px; padding: 0 6px; font-size: 0.78rem; font-weight: 700; border-left: 1px solid rgba(255,255,255,0.16); border-right: 1px solid rgba(255,255,255,0.16); }
+        .submodal-overlay { position: fixed; inset: 0; z-index: 2200; background: rgba(16,26,22,0.52); display: none; align-items: center; justify-content: center; padding: 16px; }
+        .submodal-overlay.is-open { display: flex; }
+        .gh-picker-panel { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 48px rgba(0,0,0,0.28); }
+        .submodal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .submodal-title { margin: 0; font-size: 1.05rem; font-weight: 700; }
+        .gh-picker-target { font-size: 0.84rem; font-weight: 600; color: var(--primary-dark); background: var(--primary-light); padding: 6px 10px; border-radius: 8px; }
+        .gh-picker-url-row { display: flex; gap: 8px; }
+        .gh-picker-url-row input, .gh-picker-filter-in { flex: 1; min-width: 0; min-height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-color); font-family: inherit; font-size: 0.88rem; }
+        .gh-picker-browse-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+        .gh-folder-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 0.8rem; color: var(--text-sub); }
+        .gh-crumb-btn { border: none; background: #f1f5f9; color: var(--text-main); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .gh-folder-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; }
+        .gh-folder-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--border-color); }
+        .gh-folder-row:last-child { border-bottom: none; }
+        .gh-folder-enter-btn { flex: 1; min-width: 0; border: none; background: transparent; text-align: left; font-family: inherit; font-size: 0.88rem; font-weight: 600; color: var(--text-main); cursor: pointer; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .submodal-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .loading-inline { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 20px; color: var(--text-sub); font-size: 0.88rem; }
+        .empty-panel { text-align: center; padding: 28px 14px; color: var(--text-sub); }
     </style>
 
     <script>
@@ -2177,7 +2254,7 @@
                         .getGroupHistory(payload.offset || 0, payload.pageSize || 20);
                     return;
                 }
-                if (action === 'getHistoryComments' || action === 'addHistoryComment' || action === 'editHistoryComment' || action === 'deleteHistoryComment') {
+                if (action === 'getHistoryComments' || action === 'addHistoryComment' || action === 'editHistoryComment' || action === 'deleteHistoryComment' || action === 'getHistoryAlbum' || action === 'getAlbumFileBlob' || action === 'listAlbumFolders' || action === 'bindHistoryAlbum') {
                     google.script.run
                         .withSuccessHandler(onSuccess)
                         .withFailureHandler(err => onFailure && onFailure(err && err.message ? err.message : String(err)))
@@ -2242,7 +2319,7 @@
                 if (paneEmpty) paneEmpty.style.display = 'none';
             }
 
-            callGasApi('getAllGroupHistory', {}, (response) => {
+            callGasApi('getAllGroupHistory', { userId: currentUserId || '' }, (response) => {
                 isLoading = false;
 
                 if (!response || response.success === false || !Array.isArray(response.historyList)) {
@@ -2251,6 +2328,7 @@
                     return;
                 }
 
+                window.__ghIsAdmin = Boolean(response.isAdmin);
                 allRecords = response.historyList.map((item, idx) => normalizeRecord(item, idx));
                 hideSkeletonAndReveal();
                 applyFiltersAndRender();
@@ -2369,6 +2447,7 @@
                 locationRaw: locationRaw,
                 locationName: locLines[0] || '',
                 locationAddress: locLines.slice(1).join(' '),
+                albumFolderId: String(raw && raw.albumFolderId ? raw.albumFolderId : '').trim(),
                 comments: normalizeComments(raw && raw.comments)
             };
         }
@@ -2440,6 +2519,7 @@
             const kwLower = kw.toLowerCase();
             const mbLower = mb.toLowerCase();
             const isLatestCommentMode = filterState.status === 'latestComment';
+            const isHasAlbumMode = filterState.status === 'hasAlbum';
 
             const list = [];
             for (let i = 0; i < allRecords.length; i++) {
@@ -2452,6 +2532,8 @@
                     if (meta.activeCount === 0) continue;
                     latestCommentMs = meta.latestMs;
                     latestCommentFloor = meta.latestFloor;
+                } else if (isHasAlbumMode) {
+                    if (!rec.albumFolderId) continue;
                 } else if (filterState.status !== 'all' && rec.endType !== filterState.status) {
                     continue;
                 }
@@ -2580,6 +2662,8 @@
                 const totalFloors = Array.isArray(rec.comments) ? rec.comments.length : 0;
                 const rowCmtHtml = `<span data-cmt-count="${escapeHtml(rec.rowKey)}">${totalFloors > 0 ? ` · 💬 ${totalFloors}` : ''}</span>`;
                 const cardCmtHtml = `<span class="meta-tag" data-cmt-card="${escapeHtml(rec.rowKey)}" style="${totalFloors > 0 ? '' : 'display:none;'}">💬 ${totalFloors}</span>`;
+                const rowAlbumHtml = `<span data-album-row="${escapeHtml(rec.rowKey)}">${rec.albumFolderId ? ' · 📷 相簿' : ''}</span>`;
+                const cardAlbumHtml = `<span class="meta-tag" data-album-card="${escapeHtml(rec.rowKey)}" style="${rec.albumFolderId ? '' : 'display:none;'}">📷 相簿</span>`;
 
                 if (isCompact) {
                     const compactDate = (rec.startTime ? rec.startTime.split(' ')[0] : rec.hostDate) || '未記錄';
@@ -2612,6 +2696,7 @@
                                     <span class="row-sub-sep">·</span>
                                     <span>${rec.joiners.length}人</span>
                                     ${rowCmtHtml}
+                                    ${rowAlbumHtml}
                                     ${compactRoleHtml}
                                 </div>
                             </div>
@@ -2659,6 +2744,7 @@
                             <span class="meta-tag host-tag">👑 ${escapeHtml(rec.host)}</span>
                             <span class="meta-tag">👥 ${rec.joiners.length} 人參加</span>
                             ${cardCmtHtml}
+                            ${cardAlbumHtml}
                             ${roleBadgeHtml}
                             ${locBadgeHtml}
                             <span class="card-more-cue">詳情 ›</span>
@@ -2899,6 +2985,7 @@
                 chipsHtml += `<span style="font-size:0.84rem;color:#9ca3af;padding:4px 2px;">無額外參加者</span>`;
             }
             chipsWrap.innerHTML = chipsHtml;
+            renderStandaloneAlbumSection(prefix, rec);
             renderCommentsSection(prefix, rec);
             refreshComments(prefix);
 
@@ -3616,6 +3703,7 @@
             <button type="button" class="filter-chip" data-status="圓滿結束">圓滿結束</button>
             <button type="button" class="filter-chip" data-status="提前關團">提前關團</button>
             <button type="button" class="filter-chip" data-status="latestComment">💬 最新留言</button>
+            <button type="button" class="filter-chip" data-status="hasAlbum">📷 有相簿</button>
             <button type="button" class="filter-chip sort-chip" id="sortToggleBtn">最新 ▾</button>
         </div>
 
@@ -3725,6 +3813,7 @@
                         <div id="paneMemberChips" class="member-chips-wrap"></div>
                     </div>
 
+                    <div id="paneAlbumBlock" style="display: none;"></div>
                     <div id="paneCommentsBlock" class="gh-comments-block"></div>
                 </div>
             </div>
@@ -3783,10 +3872,298 @@
                 <div id="detailMemberChips" class="member-chips-wrap"></div>
             </div>
 
+            <div id="detailAlbumBlock" style="display: none;"></div>
             <div id="detailCommentsBlock" class="gh-comments-block"></div>
         </div>
     </div>
 </div>
+
+<!-- 共用相簿檢視抽屜（與入口網站 100% 相同元件與操作） -->
+<div id="albumViewerOverlay" class="drawer-overlay" onclick="PortalAlbumViewer.handleOverlayClick(event)">
+    <div id="albumViewerPanel" class="drawer-panel detail-drawer" role="dialog" aria-modal="true" aria-labelledby="albumViewerTitle">
+        <div class="drawer-header">
+            <div class="drawer-header__meta">
+                <span id="albumViewerCatPill" class="meta-pill">📁 活動相簿</span>
+                <span id="albumViewerCountPill" class="status-pill is-done">載入中</span>
+            </div>
+            <button type="button" class="icon-close-btn" onclick="PortalAlbumViewer.close()" aria-label="關閉相簿">✕</button>
+        </div>
+        <div id="albumViewerBody" class="drawer-body">
+            <div class="album-viewer-hero">
+                <h2 id="albumViewerTitle" class="detail-title" style="margin:0 0 6px;">活動相簿</h2>
+                <div id="albumViewerSub" class="album-viewer-sub"></div>
+                <div class="album-viewer-actions">
+                    <button type="button" id="albumBatchToggleBtn" class="gh-btn" onclick="PortalAlbumViewer.toggleSelectMode()">☑️ 批次下載</button>
+                    <a id="albumOpenDriveBtn" href="#" target="_blank" rel="noopener noreferrer" class="gh-btn">📂 Drive 原資料夾 ↗</a>
+                    <button type="button" id="albumRefreshBtn" class="gh-btn" onclick="PortalAlbumViewer.refresh()">🔄 重新整理</button>
+                </div>
+            </div>
+            <div id="albumBatchBar" class="album-batch-bar" style="display: none;">
+                <div class="album-batch-bar__top">
+                    <span id="albumBatchCount" class="album-batch-count">已選 0 / 20 張</span>
+                    <div class="album-batch-bar__btns">
+                        <button type="button" class="gh-btn" onclick="PortalAlbumViewer.selectTopImages()">全選前 20 張</button>
+                        <button type="button" class="gh-btn" onclick="PortalAlbumViewer.clearSelection()">清除</button>
+                        <button type="button" id="albumBatchDownloadBtn" class="gh-btn is-primary" onclick="PortalAlbumViewer.downloadSelectedBatch()" disabled>📦 打包下載 (0 張)</button>
+                    </div>
+                </div>
+                <div id="albumBatchProgress" class="album-batch-progress" style="display: none;"></div>
+            </div>
+            <div id="albumViewerLoading" class="loading-inline" style="display: none;"><span>正在讀取 Google Drive 相片清單...</span></div>
+            <div id="albumMediaGrid" class="album-media-grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 共用全螢幕滑動縮放燈箱 -->
+<div id="albumLightbox" class="album-lightbox" role="dialog" aria-modal="true" aria-label="相片檢視燈箱" onclick="if(event.target===this) PortalAlbumViewer.closeLightbox()">
+    <div class="album-lb-top">
+        <div class="album-lb-meta">
+            <span id="albumLbCounter" class="album-lb-counter">1 / 1</span>
+            <span id="albumLbName" class="album-lb-name"></span>
+        </div>
+        <button type="button" class="icon-close-btn" onclick="PortalAlbumViewer.closeLightbox()" aria-label="關閉燈箱">✕</button>
+    </div>
+    <div id="albumLbStage" class="album-lb-stage" onclick="if(event.target===this) PortalAlbumViewer.closeLightbox()">
+        <button type="button" id="albumLbPrevBtn" class="album-lb-nav is-prev" onclick="event.stopPropagation(); PortalAlbumViewer.stepLightbox(-1)" aria-label="上一張">‹</button>
+        <div class="album-lb-img-wrap" onclick="event.stopPropagation()">
+            <img id="albumLbImg" src="" alt="相片預覽" referrerpolicy="no-referrer">
+            <a id="albumLbVideoNotice" href="#" target="_blank" rel="noopener noreferrer" class="album-lb-video-btn" style="display: none;">▶ 點此前往 Drive 播放完整影片 ↗</a>
+        </div>
+        <button type="button" id="albumLbNextBtn" class="album-lb-nav is-next" onclick="event.stopPropagation(); PortalAlbumViewer.stepLightbox(1)" aria-label="下一張">›</button>
+    </div>
+    <div class="album-lb-toolbar" onclick="event.stopPropagation()">
+        <div class="album-lb-zoom-group" role="group" aria-label="縮放控制">
+            <button type="button" class="album-lb-zoom-btn" onclick="PortalAlbumViewer.zoomBy(-0.5)" aria-label="縮小">－</button>
+            <button type="button" id="albumLbZoomPct" class="album-lb-zoom-pct" onclick="PortalAlbumViewer.resetZoom()" title="重置為 100%">100%</button>
+            <button type="button" class="album-lb-zoom-btn" onclick="PortalAlbumViewer.zoomBy(0.5)" aria-label="放大">＋</button>
+        </div>
+        <a id="albumLbDownloadBtn" href="#" target="_blank" rel="noopener noreferrer" class="gh-btn is-primary">⬇️ 下載相片</a>
+        <a id="albumLbDriveBtn" href="#" target="_blank" rel="noopener noreferrer" class="gh-btn">↗ 在 Drive 開啟</a>
+    </div>
+</div>
+
+<!-- 管理群專用：相簿階層綁定彈窗 -->
+<div id="ghAlbumPickerOverlay" class="submodal-overlay" onclick="if(event.target===this) closeStandaloneAlbumPicker()">
+    <div class="gh-picker-panel" role="dialog" aria-modal="true" aria-labelledby="ghPickerTitle">
+        <div class="submodal-head">
+            <h3 id="ghPickerTitle" class="submodal-title">🔗 綁定活動相簿</h3>
+            <button type="button" class="icon-close-btn" onclick="closeStandaloneAlbumPicker()" aria-label="關閉">✕</button>
+        </div>
+        <div id="ghPickerTargetName" class="gh-picker-target"></div>
+        <div class="gh-picker-url-row">
+            <input type="text" id="ghPickerUrlInput" placeholder="直接貼上 Google Drive 資料夾連結或 ID..." autocomplete="off">
+            <button type="button" id="ghPickerUrlBindBtn" class="gh-btn is-primary" onclick="submitStandaloneAlbumUrl()">綁定</button>
+        </div>
+        <div class="gh-picker-browse-head">
+            <div id="ghPickerBreadcrumb" class="gh-folder-breadcrumb"></div>
+            <button type="button" id="ghPickerBindCurrentBtn" class="gh-btn" style="display: none;" onclick="bindStandaloneCurrentFolder()">✅ 綁定此資料夾</button>
+        </div>
+        <input type="text" id="ghPickerFilterInput" class="gh-picker-filter-in" placeholder="過濾目前資料夾內的子資料夾..." oninput="filterStandalonePickerFolders(this.value)" autocomplete="off">
+        <div id="ghPickerFolderList" class="gh-folder-list"></div>
+        <div class="submodal-actions">
+            <button type="button" id="ghPickerUnbindBtn" class="gh-btn is-danger" style="display: none;" onclick="unbindStandaloneAlbum()">解除綁定</button>
+            <button type="button" class="gh-btn" onclick="closeStandaloneAlbumPicker()">關閉</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.PortalApi = window.PortalApi || {
+        callGasApi: function(_service, action, params, onSuccess, onFailure) {
+            callGasApi(action, params || {}, onSuccess, onFailure);
+        },
+        escapeHtml: escapeHtml,
+        escapeHtmlAttr: function(s) { return escapeHtml(s).replace(/"/g, '&quot;'); },
+        openExternalUrl: openExternalUrl,
+        syncDetailDrawerOffset: function(panelOrId) {
+            const panel = typeof panelOrId === 'string' ? document.getElementById(panelOrId) : panelOrId;
+            if (!panel) return;
+            const header = panel.querySelector('.drawer-header');
+            const body = panel.querySelector('.drawer-body');
+            if (!header || !body) return;
+            const apply = () => {
+                const h = header.offsetHeight;
+                if (!h) return;
+                const val = Math.max(88, header.offsetTop + h + 18) + 'px';
+                body.style.paddingTop = val;
+                body.style.scrollPaddingTop = val;
+            };
+            apply();
+            requestAnimationFrame(apply);
+        }
+    };
+
+    const standalonePicker = { rec: null, stack: [], currentFolderId: '', currentHasMedia: false, folders: [], filterText: '', busy: false };
+
+    function renderStandaloneAlbumSection(prefix, rec) {
+        const box = document.getElementById(`${prefix}AlbumBlock`);
+        if (!box || !rec) return;
+        const admin = Boolean(window.__ghIsAdmin);
+        const hasAlbum = Boolean(rec.albumFolderId);
+        if (!hasAlbum && !admin) {
+            box.style.display = 'none';
+            box.innerHTML = '';
+            return;
+        }
+        box.style.display = 'block';
+        if (hasAlbum) {
+            box.innerHTML = `
+                <div class="gh-album-card">
+                    <div class="gh-album-card__info">
+                        <div class="gh-album-card__title">📷 活動聚會相簿</div>
+                        <div class="gh-album-card__sub">支援全螢幕雙指縮放、單張下載與批次打包 ZIP</div>
+                    </div>
+                    <div class="gh-album-card__actions">
+                        <button type="button" class="gh-btn is-primary" onclick="openStandaloneRecAlbum('${prefix}')">🖼️ 檢視相簿</button>
+                        ${admin ? `<button type="button" class="gh-btn" onclick="openStandaloneAlbumPicker('${prefix}')">✏️ 更換相簿</button>` : ''}
+                    </div>
+                </div>`;
+        } else {
+            box.innerHTML = `
+                <div class="gh-album-card is-empty">
+                    <div class="gh-album-card__info">
+                        <div class="gh-album-card__title">📷 尚未綁定活動相簿</div>
+                        <div class="gh-album-card__sub">僅管理群可見：可從總資料夾選擇或直貼 Google Drive 連結</div>
+                    </div>
+                    <div class="gh-album-card__actions">
+                        <button type="button" class="gh-btn" onclick="openStandaloneAlbumPicker('${prefix}')">🔗 綁定相簿</button>
+                    </div>
+                </div>`;
+        }
+    }
+
+    function openStandaloneRecAlbum(prefix) {
+        const st = commentUiState[prefix];
+        const rec = st && st.rec;
+        if (!rec || !rec.albumFolderId || !window.PortalAlbumViewer) return;
+        window.PortalAlbumViewer.open(rec.albumFolderId, { name: rec.title, displayDate: rec.shortTime });
+    }
+
+    function openStandaloneAlbumPicker(prefix) {
+        if (!window.__ghIsAdmin) return;
+        const st = commentUiState[prefix];
+        const rec = st && st.rec;
+        if (!rec) return;
+        standalonePicker.rec = rec;
+        standalonePicker.stack = [];
+        standalonePicker.folders = [];
+        standalonePicker.filterText = '';
+        standalonePicker.busy = false;
+        document.getElementById('ghPickerTargetName').textContent = `目標活動：${rec.title}（${rec.shortTime}）`;
+        document.getElementById('ghPickerUrlInput').value = rec.albumFolderId ? `https://drive.google.com/drive/folders/${rec.albumFolderId}?usp=drive_link` : '';
+        document.getElementById('ghPickerFilterInput').value = '';
+        document.getElementById('ghPickerUnbindBtn').style.display = rec.albumFolderId ? 'inline-flex' : 'none';
+        document.getElementById('ghAlbumPickerOverlay').classList.add('is-open');
+        browseStandaloneFolder('');
+    }
+
+    function closeStandaloneAlbumPicker() {
+        if (standalonePicker.busy) return;
+        document.getElementById('ghAlbumPickerOverlay').classList.remove('is-open');
+    }
+
+    function browseStandaloneFolder(folderId, crumbIndex) {
+        const listEl = document.getElementById('ghPickerFolderList');
+        const bindCurBtn = document.getElementById('ghPickerBindCurrentBtn');
+        listEl.innerHTML = '<div class="loading-inline">讀取資料夾清單中...</div>';
+        bindCurBtn.style.display = 'none';
+        callGasApi('listAlbumFolders', { userId: currentUserId || '', folderId: folderId || '' }, res => {
+            if (!res || res.success === false) {
+                listEl.innerHTML = `<div style="padding:14px;color:#dc2626;font-size:0.86rem;">${escapeHtml((res && res.error) || '讀取失敗')}</div>`;
+                return;
+            }
+            standalonePicker.currentFolderId = res.folderId;
+            standalonePicker.currentHasMedia = Boolean(res.hasMedia);
+            standalonePicker.folders = Array.isArray(res.folders) ? res.folders : [];
+            standalonePicker.filterText = '';
+            document.getElementById('ghPickerFilterInput').value = '';
+            if (typeof crumbIndex === 'number' && crumbIndex >= 0) {
+                standalonePicker.stack = standalonePicker.stack.slice(0, crumbIndex + 1);
+            } else if (res.isRoot || standalonePicker.stack.length === 0) {
+                standalonePicker.stack = [{ id: res.folderId, name: res.folderName || '總資料夾' }];
+            } else {
+                const ex = standalonePicker.stack.findIndex(s => s.id === res.folderId);
+                if (ex !== -1) standalonePicker.stack = standalonePicker.stack.slice(0, ex + 1);
+                else standalonePicker.stack.push({ id: res.folderId, name: res.folderName || '子資料夾' });
+            }
+            bindCurBtn.style.display = res.isRoot ? 'none' : 'inline-flex';
+            document.getElementById('ghPickerBreadcrumb').innerHTML = standalonePicker.stack.map((it, idx) =>
+                `${idx > 0 ? '<span>›</span>' : ''}<button type="button" class="gh-crumb-btn" onclick="browseStandaloneFolder('${escapeHtml(it.id)}', ${idx})">${idx === 0 ? '📁 ' : ''}${escapeHtml(it.name)}</button>`
+            ).join('');
+            renderStandalonePickerList();
+        }, err => {
+            listEl.innerHTML = `<div style="padding:14px;color:#dc2626;font-size:0.86rem;">連線失敗：${escapeHtml(err)}</div>`;
+        });
+    }
+
+    function filterStandalonePickerFolders(text) {
+        standalonePicker.filterText = String(text || '').trim().toLowerCase();
+        renderStandalonePickerList();
+    }
+
+    function renderStandalonePickerList() {
+        const listEl = document.getElementById('ghPickerFolderList');
+        const kw = standalonePicker.filterText;
+        const list = kw ? standalonePicker.folders.filter(f => String(f.name || '').toLowerCase().includes(kw)) : standalonePicker.folders;
+        if (!list.length) {
+            listEl.innerHTML = `<div style="padding:18px;text-align:center;color:#6b7280;font-size:0.84rem;">${standalonePicker.folders.length ? '沒有符合關鍵字的子資料夾' : (standalonePicker.currentHasMedia ? '此資料夾內已是照片檔案，請點擊上方「✅ 綁定此資料夾」' : '此資料夾沒有子資料夾')}</div>`;
+            return;
+        }
+        listEl.innerHTML = list.map(f => `
+            <div class="gh-folder-row">
+                <button type="button" class="gh-folder-enter-btn" onclick="browseStandaloneFolder('${escapeHtml(f.id)}')"><span>📁</span><span>${escapeHtml(f.name)}</span></button>
+                <button type="button" class="gh-btn" onclick="executeStandaloneBind('${escapeHtml(f.id)}')">✅ 綁定</button>
+            </div>
+        `).join('');
+    }
+
+    function submitStandaloneAlbumUrl() {
+        const val = (document.getElementById('ghPickerUrlInput').value || '').trim();
+        if (!val) { Swal.fire({ icon: 'warning', title: '請貼上資料夾連結', confirmButtonColor: '#3a6e59' }); return; }
+        executeStandaloneBind(val);
+    }
+
+    function bindStandaloneCurrentFolder() {
+        if (standalonePicker.currentFolderId) executeStandaloneBind(standalonePicker.currentFolderId);
+    }
+
+    function unbindStandaloneAlbum() {
+        Swal.fire({ icon: 'warning', title: '確定解除綁定相簿？', showCancelButton: true, confirmButtonText: '確定解除', cancelButtonText: '取消', confirmButtonColor: '#dc2626' })
+            .then(r => { if (r.isConfirmed) executeStandaloneBind(''); });
+    }
+
+    function executeStandaloneBind(folderInput) {
+        if (standalonePicker.busy || !standalonePicker.rec) return;
+        const rec = standalonePicker.rec;
+        standalonePicker.busy = true;
+        callGasApi('bindHistoryAlbum', { userId: currentUserId || '', rowIndex: rec.rowIndex, rowKey: rec.rowKey, folderInput: folderInput }, res => {
+            standalonePicker.busy = false;
+            if (!res || res.success === false) {
+                Swal.fire({ icon: 'error', title: '綁定失敗', text: (res && res.error) || '請稍後再試', confirmButtonColor: '#3a6e59' });
+                return;
+            }
+            if (res.rowIndex) rec.rowIndex = res.rowIndex;
+            rec.albumFolderId = res.albumFolderId || '';
+            document.querySelectorAll('[data-album-row]').forEach(el => {
+                if (el.getAttribute('data-album-row') === rec.rowKey) el.textContent = rec.albumFolderId ? ' · 📷 相簿' : '';
+            });
+            document.querySelectorAll('[data-album-card]').forEach(el => {
+                if (el.getAttribute('data-album-card') === rec.rowKey) el.style.display = rec.albumFolderId ? '' : 'none';
+            });
+            ['pane', 'detail'].forEach(p => {
+                if (commentUiState[p].rec === rec) renderStandaloneAlbumSection(p, rec);
+            });
+            closeStandaloneAlbumPicker();
+            if (filterState.status === 'hasAlbum' && !rec.albumFolderId) applyFiltersAndRender();
+            Swal.fire({ icon: 'success', title: rec.albumFolderId ? '相簿綁定成功' : '已解除相簿綁定', timer: 1600, showConfirmButton: false });
+        }, err => {
+            standalonePicker.busy = false;
+            Swal.fire({ icon: 'error', title: '系統錯誤', text: String(err), confirmButtonColor: '#3a6e59' });
+        });
+    }
+</script>
+<script src="../portal/js/albumViewer.js?v=20261127b"></script>
 </body>
 
 </html>
